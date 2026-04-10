@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"EXIT: $?\")",
+      "mcp__claude_ai_Figma__get_screenshot",
+      "mcp__claude_ai_Figma__get_metadata",
+      "Bash(python3)",
+      "WebFetch(domain:unsplash.com)",
+      "WebFetch(domain:images.unsplash.com)",
+      "Bash(npm -v)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node --input-type=module)",
+      "Bash(node -e ':*)",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(node server.js)",
+      "Bash(curl -s http://localhost:3000/api/stops)",
+      "Bash(curl -s -I http://localhost:3000/api/stops)",
+      "Bash(mkdir -p /Users/winumt/Tourist/Planner/images/places)",
+      "Bash(mkdir -p /Users/winumt/Tourist/Planner/images/packs)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1563492065-b28c5a00caed?w=120&q=80\" -o temple.jpg)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1596422846543-75c6fc197f11?w=120&q=80\" -o palace.jpg)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=120&q=80\" -o mall.jpg)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=120&q=80\" -o market.jpg)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=120&q=80\" -o street.jpg)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?w=600&q=80\" -o pack-temple.jpg)",
+      "Bash(curl -sL \"https://images.unsplash.com/photo-1596422846543-75c6fc197f11?w=600&q=80\" -o pack-food.jpg)",
+      "Bash(gh auth:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
+    ],
+    "additionalDirectories": [
+      "/Users/winumt/Tourist/Planner/images/places"
+    ]
+  }
+}

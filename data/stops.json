@@ -1,0 +1,368 @@
+{
+  "attractions": [
+    {
+      "id": "p1",
+      "name": "Temple of The Golden Buddha",
+      "dist": "900 m",
+      "tag": "Temple",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/temple.jpg",
+      "lat": 13.7397,
+      "lng": 100.5140
+    },
+    {
+      "id": "p2",
+      "name": "Grand Palace",
+      "dist": "1.5 km",
+      "tag": "Palace",
+      "tagType": "green",
+      "category": "Landmark",
+      "img": "images/places/palace.jpg",
+      "lat": 13.7499,
+      "lng": 100.4925
+    },
+    {
+      "id": "p3",
+      "name": "Wat Pho (Temple of the Reclining Buddha)",
+      "dist": "1.2 km",
+      "tag": "Temple",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/temple.jpg",
+      "lat": 13.7465,
+      "lng": 100.4929
+    },
+    {
+      "id": "p4",
+      "name": "Wat Arun (Temple of Dawn)",
+      "dist": "2.3 km",
+      "tag": "Temple",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/temple.jpg",
+      "lat": 13.7436,
+      "lng": 100.4888
+    },
+    {
+      "id": "p5",
+      "name": "The Emerald Buddha Temple (Wat Phra Kaew)",
+      "dist": "1 km",
+      "tag": "Temple",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/temple.jpg",
+      "lat": 13.7516,
+      "lng": 100.4921
+    },
+    {
+      "id": "p6",
+      "name": "Jim Thompson House",
+      "dist": "2.1 km",
+      "tag": "Museum",
+      "tagType": "green",
+      "category": "Landmark",
+      "img": "images/places/mall.jpg",
+      "lat": 13.7458,
+      "lng": 100.5298
+    },
+    {
+      "id": "p7",
+      "name": "Chatuchak Weekend Market",
+      "dist": "8 km",
+      "tag": "Market",
+      "tagType": "",
+      "category": "Mall",
+      "img": "images/places/market.jpg",
+      "lat": 13.7998,
+      "lng": 100.5500
+    },
+    {
+      "id": "p8",
+      "name": "Erawan Shrine",
+      "dist": "4.5 km",
+      "tag": "Shrine",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/market.jpg",
+      "lat": 13.7444,
+      "lng": 100.5395
+    },
+    {
+      "id": "p9",
+      "name": "Khao San Road",
+      "dist": "3 km",
+      "tag": "Street",
+      "tagType": "",
+      "category": "Activity",
+      "img": "images/places/street.jpg",
+      "lat": 13.7588,
+      "lng": 100.4971
+    },
+    {
+      "id": "p10",
+      "name": "Asiatique The Riverfront",
+      "dist": "6 km",
+      "tag": "Night Market",
+      "tagType": "green",
+      "category": "Mall",
+      "img": "images/places/market.jpg",
+      "lat": 13.7197,
+      "lng": 100.4986
+    },
+    {
+      "id": "p11",
+      "name": "Lumpini Park",
+      "dist": "5 km",
+      "tag": "Park",
+      "tagType": "green",
+      "category": "Activity",
+      "img": "images/places/palace.jpg",
+      "lat": 13.7310,
+      "lng": 100.5418
+    },
+    {
+      "id": "p12",
+      "name": "Bangkok Art and Culture Centre",
+      "dist": "3.2 km",
+      "tag": "Museum",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/culture.jpg",
+      "lat": 13.7469,
+      "lng": 100.5293
+    },
+    {
+      "id": "p13",
+      "name": "Yaowarat (Chinatown)",
+      "dist": "1.8 km",
+      "tag": "District",
+      "tagType": "",
+      "category": "Restaurant",
+      "img": "images/places/street.jpg",
+      "lat": 13.7397,
+      "lng": 100.5128
+    },
+    {
+      "id": "p14",
+      "name": "Mahanakhon Skywalk",
+      "dist": "5.5 km",
+      "tag": "Landmark",
+      "tagType": "",
+      "category": "Activity",
+      "img": "images/places/market.jpg",
+      "lat": 13.7221,
+      "lng": 100.5253
+    },
+    {
+      "id": "p15",
+      "name": "Or Tor Kor Market",
+      "dist": "9 km",
+      "tag": "Market",
+      "tagType": "",
+      "category": "Restaurant",
+      "img": "images/places/market.jpg",
+      "lat": 13.8031,
+      "lng": 100.5513
+    },
+    {
+      "id": "p16",
+      "name": "Terminal 21",
+      "dist": "7 km",
+      "tag": "Mall",
+      "tagType": "",
+      "category": "Mall",
+      "img": "images/places/mall.jpg",
+      "lat": 13.7375,
+      "lng": 100.5601
+    },
+    {
+      "id": "p17",
+      "name": "Siam Paragon",
+      "dist": "6.5 km",
+      "tag": "Mall",
+      "tagType": "",
+      "category": "Mall",
+      "img": "images/places/mall.jpg",
+      "lat": 13.7457,
+      "lng": 100.5331
+    },
+    {
+      "id": "p18",
+      "name": "Pak Khlong Talat (Flower Market)",
+      "dist": "1.5 km",
+      "tag": "Market",
+      "tagType": "green",
+      "category": "Landmark",
+      "img": "images/places/palace.jpg",
+      "lat": 13.7382,
+      "lng": 100.4969
+    },
+    {
+      "id": "p19",
+      "name": "Lumphini Muay Thai Stadium",
+      "dist": "5.8 km",
+      "tag": "Sport",
+      "tagType": "",
+      "category": "Activity",
+      "img": "images/places/street.jpg",
+      "lat": 13.7271,
+      "lng": 100.5380
+    },
+    {
+      "id": "p20",
+      "name": "Rattanakosin Exhibition Hall",
+      "dist": "1.3 km",
+      "tag": "Museum",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/culture.jpg",
+      "lat": 13.7541,
+      "lng": 100.5012
+    },
+    {
+      "id": "p21",
+      "name": "The Giant Swing (Sao Ching-Cha)",
+      "dist": "1.1 km",
+      "tag": "Landmark",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/temple.jpg",
+      "lat": 13.7527,
+      "lng": 100.5004
+    },
+    {
+      "id": "p22",
+      "name": "Damnoen Saduak Floating Market",
+      "dist": "80 km",
+      "tag": "Market",
+      "tagType": "green",
+      "category": "Activity",
+      "img": "images/places/market.jpg",
+      "lat": 13.5195,
+      "lng": 99.9573
+    },
+    {
+      "id": "p23",
+      "name": "Benchakitti Forest Park",
+      "dist": "7 km",
+      "tag": "Park",
+      "tagType": "green",
+      "category": "Activity",
+      "img": "images/places/palace.jpg",
+      "lat": 13.7218,
+      "lng": 100.5599
+    },
+    {
+      "id": "p24",
+      "name": "Suphan Hin Coffee & Cafe",
+      "dist": "3.4 km",
+      "tag": "Cafe",
+      "tagType": "",
+      "category": "Cafe",
+      "img": "images/places/market.jpg",
+      "lat": 13.7600,
+      "lng": 100.5200
+    },
+    {
+      "id": "p25",
+      "name": "Roots Coffee Roaster",
+      "dist": "4.8 km",
+      "tag": "Cafe",
+      "tagType": "",
+      "category": "Cafe",
+      "img": "images/places/mall.jpg",
+      "lat": 13.7350,
+      "lng": 100.5250
+    },
+    {
+      "id": "p26",
+      "name": "Bo.lan Restaurant",
+      "dist": "8.2 km",
+      "tag": "Restaurant",
+      "tagType": "green",
+      "category": "Restaurant",
+      "img": "images/places/street.jpg",
+      "lat": 13.7270,
+      "lng": 100.5690
+    },
+    {
+      "id": "p27",
+      "name": "Gaggan Anand",
+      "dist": "5.1 km",
+      "tag": "Restaurant",
+      "tagType": "",
+      "category": "Restaurant",
+      "img": "images/places/street.jpg",
+      "lat": 13.7460,
+      "lng": 100.5370
+    },
+    {
+      "id": "p28",
+      "name": "Vertigo & Moon Bar",
+      "dist": "6.3 km",
+      "tag": "Rooftop Bar",
+      "tagType": "",
+      "category": "Activity",
+      "img": "images/places/market.jpg",
+      "lat": 13.7219,
+      "lng": 100.5253
+    },
+    {
+      "id": "p29",
+      "name": "Sea Life Bangkok Ocean World",
+      "dist": "6.5 km",
+      "tag": "Attraction",
+      "tagType": "",
+      "category": "Activity",
+      "img": "images/places/culture.jpg",
+      "lat": 13.7458,
+      "lng": 100.5333
+    },
+    {
+      "id": "p30",
+      "name": "Wat Saket (Golden Mount)",
+      "dist": "1.6 km",
+      "tag": "Temple",
+      "tagType": "",
+      "category": "Landmark",
+      "img": "images/places/temple.jpg",
+      "lat": 13.7535,
+      "lng": 100.5057
+    }
+  ],
+  "packs": {
+    "pack-1": {
+      "title": "9 temple around Bangkok",
+      "desc": "Hit the top 9 sacred temple along Chao Phraya river in one day",
+      "img": "images/packs/pack-temple.jpg",
+      "tags": ["Wat Trimit", "Wat Pho", "Grand Palace", "Jim Thompson House", "Bangkok Art and Culture Centre"],
+      "stops": [
+        { "id": "s1-1", "name": "Wat Trimit", "dist": "900 m", "tag": "Temple", "tagType": "", "img": "images/places/temple.jpg", "lat": 13.7397, "lng": 100.5140 },
+        { "id": "s1-2", "name": "Wat Pho", "dist": "1.2 km", "tag": "Temple", "tagType": "", "img": "images/places/temple.jpg", "lat": 13.7465, "lng": 100.4929 },
+        { "id": "s1-3", "name": "Grand Palace", "dist": "1.5 km", "tag": "Palace", "tagType": "green", "img": "images/places/palace.jpg", "lat": 13.7499, "lng": 100.4925 },
+        { "id": "s1-4", "name": "Jim Thompson House", "dist": "2.1 km", "tag": "Museum", "tagType": "", "img": "images/places/culture.jpg", "lat": 13.7458, "lng": 100.5298 },
+        { "id": "s1-5", "name": "Bangkok Art and Culture Centre", "dist": "3.2 km", "tag": "Culture", "tagType": "", "img": "images/places/culture.jpg", "lat": 13.7469, "lng": 100.5293 },
+        { "id": "s1-6", "name": "Wat Arun", "dist": "2.3 km", "tag": "Temple", "tagType": "", "img": "images/places/temple.jpg", "lat": 13.7436, "lng": 100.4888 },
+        { "id": "s1-7", "name": "Wat Phra Kaew", "dist": "1 km", "tag": "Temple", "tagType": "", "img": "images/places/temple.jpg", "lat": 13.7516, "lng": 100.4921 },
+        { "id": "s1-8", "name": "Chatuchak Market", "dist": "8 km", "tag": "Market", "tagType": "", "img": "images/places/market.jpg", "lat": 13.7998, "lng": 100.5500 },
+        { "id": "s1-9", "name": "Khao San Road", "dist": "3 km", "tag": "Street", "tagType": "", "img": "images/places/street.jpg", "lat": 13.7588, "lng": 100.4971 }
+      ]
+    },
+    "pack-2": {
+      "title": "Bangkok Street Food Trail",
+      "desc": "Taste the best street food spots scattered across the city",
+      "img": "images/packs/pack-food.jpg",
+      "tags": ["Yaowarat", "Or Tor Kor Market", "Khao San Road", "Chatuchak Market"],
+      "stops": [
+        { "id": "s2-1", "name": "Yaowarat", "dist": "1.8 km", "tag": "Market", "tagType": "", "img": "images/places/street.jpg", "lat": 13.7397, "lng": 100.5128 },
+        { "id": "s2-2", "name": "Or Tor Kor Market", "dist": "9 km", "tag": "Market", "tagType": "", "img": "images/places/market.jpg", "lat": 13.8031, "lng": 100.5513 },
+        { "id": "s2-3", "name": "Khao San Road", "dist": "3 km", "tag": "Street", "tagType": "", "img": "images/places/street.jpg", "lat": 13.7588, "lng": 100.4971 },
+        { "id": "s2-4", "name": "Chatuchak Market", "dist": "8 km", "tag": "Market", "tagType": "", "img": "images/places/market.jpg", "lat": 13.7998, "lng": 100.5500 },
+        { "id": "s2-5", "name": "Asiatique", "dist": "6 km", "tag": "Night Market", "tagType": "", "img": "images/places/market.jpg", "lat": 13.7197, "lng": 100.4986 },
+        { "id": "s2-6", "name": "Chinatown", "dist": "2 km", "tag": "District", "tagType": "", "img": "images/places/street.jpg", "lat": 13.7397, "lng": 100.5128 },
+        { "id": "s2-7", "name": "Pak Khlong Talat", "dist": "1.5 km", "tag": "Market", "tagType": "", "img": "images/places/market.jpg", "lat": 13.7382, "lng": 100.4969 }
+      ]
+    }
+  }
+}

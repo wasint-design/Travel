@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add a Stop — muvmi Tourist</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone Frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      height: 44px;
+      background: #fff;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 6px;
+      flex-shrink: 0;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #4F4F4F; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Nav Bar ── */
+    .nav-bar {
+      height: 64px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      /* box-shadow: 0 0 4px rgba(0,0,0,0.1); */
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .btn-back {
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; padding: 4px; color: #4F4F4F;
+    }
+    .nav-title {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-size: 20px; font-weight: 600; color: #4F4F4F; white-space: nowrap;
+    }
+    .btn-done {
+      background: none; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: #0D57E2;
+      letter-spacing: 0.25px; padding: 4px;
+    }
+    .btn-done:hover { opacity: 0.75; }
+
+    /* ── Body scroll area ── */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .body::-webkit-scrollbar { display: none; }
+
+    /* ── Segmented tab control ── */
+    .tabs-wrap {
+      padding: 24px 16px 0;
+    }
+    .tabs {
+      display: flex;
+      background: #E7EEFC;
+      border-radius: 16px;
+      padding: 0;
+      gap: 0;
+    }
+    .tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0D57E2;
+      cursor: pointer;
+      border-radius: 16px;
+      letter-spacing: 0.25px;
+      line-height: 22px;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: #0D57E2;
+      color: #fff;
+    }
+
+    /* ── Search bar ── */
+    .search-wrap {
+      padding: 24px 16px 0;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 42px;
+      border: 1px solid #E7EEFC;
+      border-radius: 12px;
+      padding: 0 14px;
+      background: #fff;
+      cursor: text;
+    }
+    .search-box input {
+      border: none; outline: none; background: transparent;
+      font-size: 14px; font-weight: 600; color: #909090;
+      letter-spacing: 0.25px; width: 100%;
+    }
+    .search-box input::placeholder { color: #909090; }
+
+    /* ── Category chips ── */
+    .categories {
+      display: flex;
+      gap: 16px;
+      padding: 24px 16px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .categories::-webkit-scrollbar { display: none; }
+    .categories.dragging { cursor: grabbing; user-select: none; }
+    .category-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .chip-icon {
+      width: 56px; height: 52px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      transition: opacity .15s;
+    }
+    .chip-icon:hover { opacity: 0.8; }
+    .chip-label {
+      font-size: 12px; font-weight: 500;
+      color: #4F4F4F; text-align: center;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+      transition: color .15s;
+    }
+    .category-chip.active .chip-icon {
+      box-shadow: 0 0 0 2.5px #0D57E2;
+    }
+    .category-chip.active .chip-label {
+      color: #0D57E2;
+      font-weight: 600;
+    }
+
+    /* ── Place list (Attractions tab) ── */
+    .place-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 24px 16px 16px;
+    }
+    .place-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+    }
+    .place-thumb {
+      width: 48px; height: 48px;
+      border-radius: 9px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #DDEEFF;
+    }
+    .place-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .place-name {
+      font-size: 14px; font-weight: 600;
+      color: #4F4F4F; letter-spacing: 0.25px;
+      line-height: 22px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .place-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .place-dist {
+      font-size: 12px; font-weight: 400;
+      color: #939598; line-height: 18px;
+    }
+    .place-tag {
+      background: #E7EEFC;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 12px; font-weight: 400;
+      color: #4F4F4F; line-height: 18px;
+      white-space: nowrap;
+    }
+    .place-tag.green { background: #E7FCED; }
+    .btn-bookmark {
+      background: none; border: none; cursor: pointer;
+      flex-shrink: 0; padding: 2px;
+    }
+    /* Stroked = unselected, Filled = selected */
+    .btn-bookmark svg path {
+      fill: none;
+      stroke: #4F4F4F;
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+      transition: fill .15s, stroke .15s;
+    }
+    .btn-bookmark.selected svg path {
+      fill: #0D57E2;
+      stroke: none;
+    }
+
+    /* ── Section title ── */
+    .section-title {
+      padding: 32px 16px 8px;
+      font-size: 16px; font-weight: 600;
+      color: #4F4F4F; letter-spacing: 0.25px;
+      line-height: 24px;
+    }
+
+    /* ── Trip plan cards ── */
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 0 16px 32px;
+    }
+    .trip-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    /* Image area: 144px tall, image overflows vertically (parallax crop) */
+    .card-image-wrap {
+      height: 144px;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      width: 100%;
+    }
+    .card-image {
+      position: absolute;
+      top: -49px;
+      left: 0;
+      width: 100%;
+      height: 241px;
+      object-fit: cover;
+    }
+    .card-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* Title + description group */
+    .card-text { display: flex; flex-direction: column; }
+    .card-title {
+      font-size: 14px; font-weight: 600;
+      color: #0D57E2; letter-spacing: 0.25px;
+      line-height: 22px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-desc {
+      font-size: 14px; font-weight: 500;
+      color: #4F4F4F; letter-spacing: 0.25px;
+      line-height: 22px;
+    }
+    /* Tags + see-all group */
+    .card-tags-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* Fixed 60px container; tags absolutely positioned in 2 rows, fades at bottom */
+    .card-tags {
+      position: relative;
+      height: 60px;
+      overflow: hidden;
+    }
+    .card-tags::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 0; height: 24px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #fff 100%);
+      pointer-events: none;
+    }
+    .card-tag {
+      position: absolute;
+      background: #E7EEFC;
+      border-radius: 16px;
+      padding: 2px 8px;
+      font-size: 14px; font-weight: 500;
+      color: #4F4F4F; letter-spacing: 0.25px;
+      line-height: 22px; white-space: nowrap;
+    }
+    .see-all {
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+    }
+    .see-all-line { flex: 1; height: 1px; background: #E7EEFC; }
+    .see-all-text {
+      font-size: 12px; font-weight: 600;
+      color: #0D57E2; letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+    /* Button footer separate from card-body */
+    .card-footer { padding: 0 16px 16px; }
+    .btn-add-all {
+      width: 100%;
+      background: #0D57E2; color: #fff;
+      border: none; border-radius: 24px;
+      padding: 8px 16px; height: 44px;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 0.25px; cursor: pointer;
+      transition: opacity .15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-add-all:hover { opacity: 0.85; }
+    .btn-add-all.added { cursor: pointer; }
+    .btn-add-all.added:hover { opacity: 0.85; }
+    .btn-check-icon { display: none; flex-shrink: 0; }
+    .btn-add-all.added .btn-check-icon { display: block; }
+
+    /* ── Bottom sheet overlay ── */
+    .sheet-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    .sheet-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Bottom sheet ── */
+    .bottom-sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      z-index: 51;
+      display: flex;
+      flex-direction: column;
+      max-height: 85%;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .bottom-sheet.open {
+      transform: translateY(0);
+    }
+    .sheet-header {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 24px 40px 16px;
+      flex-shrink: 0;
+    }
+    .sheet-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: #4F4F4F;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sheet-close:hover { opacity: 0.7; }
+    .sheet-title {
+      font-size: 16px; font-weight: 600;
+      color: #0D57E2; letter-spacing: 0.25px;
+      line-height: 24px;
+    }
+    .sheet-subtitle {
+      font-size: 14px; font-weight: 400;
+      color: #4F4F4F; letter-spacing: 0.25px;
+      line-height: 22px;
+      margin-top: 2px;
+    }
+    .sheet-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+      padding: 0 16px;
+    }
+    .sheet-list::-webkit-scrollbar { display: none; }
+    .sheet-stop-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F5F5F5;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sheet-stop-item:last-child { border-bottom: none; }
+    .sheet-stop-thumb {
+      width: 48px; height: 48px;
+      border-radius: 9px; object-fit: cover; flex-shrink: 0;
+    }
+    .sheet-stop-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sheet-stop-name {
+      font-size: 14px; font-weight: 600;
+      color: #4F4F4F; line-height: 22px;
+      letter-spacing: 0.25px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: color .15s;
+    }
+    .sheet-stop-meta {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sheet-stop-dist {
+      font-size: 12px; font-weight: 400;
+      color: #939598; line-height: 18px;
+    }
+    .sheet-stop-tag {
+      background: #E7EEFC;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 12px; font-weight: 400;
+      color: #4F4F4F; line-height: 18px;
+      white-space: nowrap;
+    }
+    .sheet-stop-tag.green { background: #E7FCED; }
+    .sheet-stop-item.unchecked .sheet-stop-name { color: #C0C0C0; }
+    /* Already-added: dimmed + non-interactive */
+    .sheet-stop-item.already-added {
+      opacity: 0.45;
+      pointer-events: none;
+      cursor: default;
+    }
+    .sheet-stop-item.already-added .sheet-stop-name { color: #909090; }
+    /* "Added" badge shown on already-added items */
+    .badge-added {
+      flex-shrink: 0;
+      background: #E7EEFC;
+      color: #0D57E2;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 18px;
+      white-space: nowrap;
+    }
+    .sheet-checkbox {
+      width: 24px; height: 24px;
+      border: 1.5px solid #909090;
+      border-radius: 4px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #fff;
+      transition: border-color .15s, background .15s;
+    }
+    .sheet-checkbox.checked {
+      background: #0D57E2;
+      border-color: #0D57E2;
+    }
+    .sheet-checkbox svg { display: block; }
+    .sheet-footer {
+      padding: 12px 16px 24px;
+      flex-shrink: 0;
+    }
+    .sheet-btn-add {
+      width: 100%;
+      background: #0D57E2; color: #fff;
+      border: none; border-radius: 24px;
+      padding: 8px 12px; height: 44px;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 0.25px; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .sheet-btn-add:disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+    .sheet-btn-add:not(:disabled):hover { opacity: 0.85; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Home Indicator ── */
+    .home-indicator {
+      height: 34px; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-indicator-bar {
+      width: 130px; height: 5px;
+      background: #1a1a1a; border-radius: 100px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">5:13</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="7" width="3" height="5" rx="1" fill="#4F4F4F"/>
+        <rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="#4F4F4F"/>
+        <rect x="9" y="2" width="3" height="10" rx="1" fill="#4F4F4F"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#4F4F4F" opacity="0.3"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#4F4F4F"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#4F4F4F"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#4F4F4F"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#4F4F4F" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="15" height="8" rx="2" fill="#4F4F4F"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#4F4F4F" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nav Bar -->
+  <div class="nav-bar">
+    <button class="btn-back" id="btn-back" aria-label="Back">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="#4F4F4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span class="nav-title">Add a stop</span>
+    <button class="btn-done" id="btn-done">Done</button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="body">
+
+    <!-- Segmented tabs -->
+    <div class="tabs-wrap">
+      <div class="tabs">
+        <div class="tab active" data-tab="attractions">Attractions</div>
+        <div class="tab" data-tab="trip-ideas">Trip ideas</div>
+      </div>
+    </div>
+
+    <!-- ── Attractions panel ── -->
+    <div class="tab-panel active" id="panel-attractions">
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="5" stroke="#909090" stroke-width="1.5"/>
+            <path d="M11 11l2.5 2.5" stroke="#909090" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <input type="text" placeholder="Search temple, cafes, parks...." />
+        </div>
+      </div>
+
+      <!-- Category chips -->
+      <div class="categories" id="categories">
+        <div class="category-chip active" data-category="all">
+          <div class="chip-icon" style="background:rgba(13,87,226,0.1);">🗺️</div>
+          <span class="chip-label">All</span>
+        </div>
+        <div class="category-chip" data-category="Landmark">
+          <div class="chip-icon" style="background:#E7EEFC;">🏛️</div>
+          <span class="chip-label">Landmark</span>
+        </div>
+        <div class="category-chip" data-category="Activity">
+          <div class="chip-icon" style="background:rgba(240,165,85,0.2);">🏃</div>
+          <span class="chip-label">Activity</span>
+        </div>
+        <div class="category-chip" data-category="Restaurant">
+          <div class="chip-icon" style="background:rgba(75,205,130,0.2);">🍽️</div>
+          <span class="chip-label">Restaurant</span>
+        </div>
+        <div class="category-chip" data-category="Cafe">
+          <div class="chip-icon" style="background:rgba(79,70,229,0.2);">☕</div>
+          <span class="chip-label">Cafe</span>
+        </div>
+        <div class="category-chip" data-category="Mall">
+          <div class="chip-icon" style="background:rgba(255,220,45,0.2);">🛍️</div>
+          <span class="chip-label">Mall</span>
+        </div>
+      </div>
+
+      <!-- Place list — rendered from stops.json -->
+      <div class="place-list" id="attraction-list"></div>
+    </div>
+
+    <!-- ── Trip ideas panel ── -->
+    <div class="tab-panel" id="panel-trip-ideas">
+      <p class="section-title">Ready to go trip plans just for you</p>
+      <!-- Cards rendered from stops.json -->
+      <div class="cards" id="cards-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Sheet Overlay -->
+  <div class="sheet-overlay" id="sheet-overlay"></div>
+
+  <!-- Bottom Sheet -->
+  <div class="bottom-sheet" id="bottom-sheet">
+    <div class="sheet-header">
+      <button class="sheet-close" id="sheet-close" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6l12 12" stroke="#4F4F4F" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <p class="sheet-title" id="sheet-title"></p>
+      <p class="sheet-subtitle">See attraction details by click on the list</p>
+    </div>
+    <div class="sheet-list" id="sheet-list"></div>
+    <div class="sheet-footer">
+      <button class="sheet-btn-add" id="sheet-btn-add">Add (0) stops to plan</button>
+    </div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator">
+    <div class="home-indicator-bar"></div>
+  </div>
+
+</div>
+
+<script>
+  // ── Tab switching ──
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.tab-panel');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── API helpers ──
+  const API_BASE    = 'http://localhost:3000';
+  const PLANNER_API = API_BASE + '/api/planner';
+  const STOPS_API   = API_BASE + '/api/stops';
+
+  async function loadData() {
+    const res = await fetch(PLANNER_API);
+    return res.json();
+  }
+
+  async function saveData(data) {
+    await fetch(PLANNER_API, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  }
+
+  // ── Render attractions from stops.json ──
+  function renderAttractionItem(stop, selectedIds) {
+    const tagClass = stop.tagType === 'green' ? ' green' : '';
+    const div = document.createElement('div');
+    div.className = 'place-item';
+    div.dataset.placeId      = stop.id;
+    div.dataset.placeName    = stop.name;
+    div.dataset.placeDist    = stop.dist;
+    div.dataset.placeTag     = stop.tag;
+    div.dataset.placeTagType = stop.tagType;
+    div.innerHTML = `
+      <img class="place-thumb" src="${stop.img}" alt="${stop.name}" />
+      <div class="place-info">
+        <span class="place-name">${stop.name}</span>
+        <div class="place-meta">
+          <span class="place-dist">${stop.dist}</span>
+          <span class="place-tag${tagClass}">${stop.tag}</span>
+        </div>
+      </div>
+      <button class="btn-bookmark${selectedIds.has(stop.id) ? ' selected' : ''}" aria-label="Bookmark">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+      </button>
+    `;
+    return div;
+  }
+
+  // ── Render pack cards from stops.json ──
+  function renderPackCard(packId, pack, addedPacks) {
+    const count = pack.stops.length;
+    const addedCount = addedPacks[packId];
+    const isAdded = !!addedCount;
+
+    // Layout tags in 2 rows with absolute positioning
+    let tagHtml = '';
+    const positions = [
+      { top: 0,   left: 0   },
+      { top: 0,   left: 88  },
+      { top: 0,   left: 166 },
+      { top: 34,  left: 0   },
+      { top: 34,  left: 158 },
+    ];
+    (pack.tags || pack.stops.slice(0, 5).map(s => s.name)).forEach((tag, i) => {
+      const pos = positions[i] || { top: 34, left: 0 };
+      tagHtml += `<span class="card-tag" style="top:${pos.top}px; left:${pos.left}px;">${tag}</span>`;
+    });
+
+    const card = document.createElement('div');
+    card.className = 'trip-card';
+    card.dataset.packId = packId;
+    card.innerHTML = `
+      <div class="card-image-wrap">
+        <img class="card-image" src="${pack.img}" alt="${pack.title}" />
+      </div>
+      <div class="card-body">
+        <div class="card-text">
+          <p class="card-title">${pack.title}</p>
+          <p class="card-desc">${pack.desc}</p>
+        </div>
+        <div class="card-tags-section">
+          <div class="card-tags">${tagHtml}</div>
+          <div class="see-all">
+            <div class="see-all-line"></div>
+            <span class="see-all-text">See all ${count} stops</span>
+            <div class="see-all-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-add-all${isAdded ? ' added' : ''}" data-pack-id="${packId}">
+          <svg class="btn-check-icon" width="18" height="14" viewBox="0 0 18 14" fill="none">
+            <path d="M1.5 7l5 5L16.5 1.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="btn-add-label">${isAdded ? `${addedCount} stops Added` : `Add all stops (${count}) to plan`}</span>
+        </button>
+      </div>
+    `;
+
+    // See all → open sheet
+    card.querySelector('.see-all').addEventListener('click', () => openSheet(packId));
+
+    // Add all button
+    card.querySelector('.btn-add-all').addEventListener('click', async () => {
+      const btn = card.querySelector('.btn-add-all');
+      if (btn.classList.contains('added')) { openSheet(packId); return; }
+      await addAllStopsToFile(packId);
+      const d = await loadData();
+      d.addedPacks[packId] = count;
+      await saveData(d);
+      markPackAdded(packId, count);
+    });
+
+    return card;
+  }
+
+  // ── Bookmark toggle ──
+  document.getElementById('attraction-list').addEventListener('click', async e => {
+    const btn = e.target.closest('.btn-bookmark');
+    if (!btn) return;
+    const item = btn.closest('.place-item');
+    const id   = item.dataset.placeId;
+    const isNowSelected = btn.classList.toggle('selected');
+    if (isNowSelected) SELECTED_IDS.add(id); else SELECTED_IDS.delete(id);
+    const data = await loadData();
+    if (isNowSelected) {
+      data.selectedPlaces.push({
+        id,
+        name:    item.dataset.placeName,
+        dist:    item.dataset.placeDist,
+        tag:     item.dataset.placeTag,
+        tagType: item.dataset.placeTagType,
+        imgSrc:  item.querySelector('.place-thumb').src
+      });
+    } else {
+      data.selectedPlaces = data.selectedPlaces.filter(p => p.id !== id);
+    }
+    await saveData(data);
+  });
+
+  // ── Added Packs helpers ──
+  function markPackAdded(packId, count) {
+    const btn = document.querySelector(`.btn-add-all[data-pack-id="${packId}"]`);
+    if (!btn) return;
+    btn.classList.add('added');
+    btn.querySelector('.btn-add-label').textContent = `${count} stops Added`;
+  }
+
+  async function addAllStopsToFile(packId) {
+    const pack = PACKS[packId];
+    if (!pack) return;
+    const data = await loadData();
+    const existingIds = new Set(data.selectedPlaces.map(p => p.id));
+    pack.stops.forEach(stop => {
+      if (existingIds.has(stop.id)) return;
+      data.selectedPlaces.push({
+        id:      stop.id,
+        name:    stop.name,
+        dist:    stop.dist,
+        tag:     stop.tag,
+        tagType: stop.tagType || '',
+        imgSrc:  stop.img
+      });
+      existingIds.add(stop.id);
+    });
+    await saveData(data);
+  }
+
+  // ── Category filter state ──
+  let ATTRACTIONS  = [];
+  let SELECTED_IDS = new Set();
+  let activeCategory = 'all';
+  let searchQuery    = '';
+
+  function filterAndRender() {
+    const q = searchQuery.toLowerCase();
+    const list = document.getElementById('attraction-list');
+    list.innerHTML = '';
+    const filtered = ATTRACTIONS.filter(stop => {
+      const matchCat    = activeCategory === 'all' || stop.category === activeCategory;
+      const matchSearch = !q || stop.name.toLowerCase().includes(q) || stop.tag.toLowerCase().includes(q);
+      return matchCat && matchSearch;
+    });
+    filtered.forEach(stop => list.appendChild(renderAttractionItem(stop, SELECTED_IDS)));
+  }
+
+  // Chip clicks
+  document.getElementById('categories').addEventListener('click', e => {
+    const chip = e.target.closest('.category-chip');
+    if (!chip) return;
+    document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeCategory = chip.dataset.category;
+    filterAndRender();
+  });
+
+  // Search input
+  document.querySelector('.search-box input').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    filterAndRender();
+  });
+
+  // ── Bottom Sheet ──
+  let PACKS = {};
+
+  let checkedStops = new Set();
+  let currentPackId = null;
+
+  const CHECKMARK_SVG = `<svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+    <path d="M1 4.5L4 7.5L11 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+  async function openSheet(packId) {
+    const pack = PACKS[packId];
+    if (!pack) return;
+    currentPackId = packId;
+
+    // ดู stops ที่ add ไปแล้วใน planner
+    const plannerData = await loadData();
+    const alreadyAdded = new Set((plannerData.selectedPlaces || []).map(p => p.id));
+
+    // pre-check เฉพาะ stops ที่ยังไม่ได้ add
+    checkedStops = new Set(pack.stops.filter(s => !alreadyAdded.has(s.id)).map(s => s.id));
+
+    document.getElementById('sheet-title').textContent = pack.title;
+    const list = document.getElementById('sheet-list');
+    list.innerHTML = '';
+    pack.stops.forEach(stop => list.appendChild(createStopItem(stop, alreadyAdded)));
+    updateSheetButton();
+    document.getElementById('sheet-overlay').classList.add('open');
+    document.getElementById('bottom-sheet').classList.add('open');
+  }
+
+  function createStopItem(stop, alreadyAdded = new Set()) {
+    const isAdded   = alreadyAdded.has(stop.id);
+    const isChecked = checkedStops.has(stop.id);
+    const tagClass  = stop.tagType === 'green' ? ' green' : '';
+
+    const item = document.createElement('div');
+    item.className = 'sheet-stop-item' + (isAdded ? ' already-added' : (!isChecked ? ' unchecked' : ''));
+    item.dataset.stopId = stop.id;
+
+    // Already-added shows an "Added" badge; selectable items show a checkbox
+    const rightSlot = isAdded
+      ? `<span class="badge-added">Added</span>`
+      : `<div class="sheet-checkbox${isChecked ? ' checked' : ''}">${isChecked ? CHECKMARK_SVG : ''}</div>`;
+
+    item.innerHTML = `
+      <img class="sheet-stop-thumb" src="${stop.img}" alt="${stop.name}" />
+      <div class="sheet-stop-info">
+        <span class="sheet-stop-name">${stop.name}</span>
+        <div class="sheet-stop-meta">
+          <span class="sheet-stop-dist">${stop.dist}</span>
+          <span class="sheet-stop-tag${tagClass}">${stop.tag}</span>
+        </div>
+      </div>
+      ${rightSlot}
+    `;
+
+    if (!isAdded) {
+      item.addEventListener('click', () => toggleStop(stop, item));
+    }
+
+    return item;
+  }
+
+  function toggleStop(stop, item) {
+    const cb = item.querySelector('.sheet-checkbox');
+    if (checkedStops.has(stop.id)) {
+      checkedStops.delete(stop.id);
+      cb.classList.remove('checked');
+      cb.innerHTML = '';
+      item.classList.add('unchecked');
+    } else {
+      checkedStops.add(stop.id);
+      cb.classList.add('checked');
+      cb.innerHTML = CHECKMARK_SVG;
+      item.classList.remove('unchecked');
+    }
+    updateSheetButton();
+  }
+
+  function updateSheetButton() {
+    const btn = document.getElementById('sheet-btn-add');
+    const count = checkedStops.size;
+    btn.textContent = `Add (${count}) stops to plan`;
+    btn.disabled = count === 0;
+  }
+
+  function closeSheet() {
+    document.getElementById('sheet-overlay').classList.remove('open');
+    document.getElementById('bottom-sheet').classList.remove('open');
+  }
+
+  document.getElementById('sheet-overlay').addEventListener('click', closeSheet);
+  document.getElementById('sheet-close').addEventListener('click', closeSheet);
+
+  document.querySelectorAll('.trip-card').forEach(card => {
+    card.querySelector('.see-all').addEventListener('click', () => {
+      openSheet(card.dataset.packId);
+    });
+  });
+
+  document.getElementById('sheet-btn-add').addEventListener('click', async () => {
+    if (!currentPackId) return;
+    const pack = PACKS[currentPackId];
+    const data = await loadData();
+    const existingIds = new Set(data.selectedPlaces.map(p => p.id));
+
+    pack.stops.forEach(stop => {
+      if (!checkedStops.has(stop.id)) return;
+      if (existingIds.has(stop.id)) return;
+      data.selectedPlaces.push({
+        id:      stop.id,
+        name:    stop.name,
+        dist:    stop.dist,
+        tag:     stop.tag,
+        tagType: stop.tagType || '',
+        imgSrc:  stop.img
+      });
+      existingIds.add(stop.id);
+    });
+
+    const count = checkedStops.size;
+    data.addedPacks[currentPackId] = Math.max(count, data.addedPacks[currentPackId] || 0);
+    await saveData(data);
+    window.location.href = 'planner.html';
+  });
+
+  // ── Bootstrap: load stops.json + planner.json, render everything ──
+  async function init() {
+    const [stopsData, plannerData] = await Promise.all([
+      fetch(STOPS_API).then(r => r.json()),
+      loadData()
+    ]);
+
+    // Populate globals from stops.json
+    PACKS       = stopsData.packs || {};
+    ATTRACTIONS = stopsData.attractions || [];
+
+    SELECTED_IDS = new Set((plannerData.selectedPlaces || []).map(p => p.id));
+    const addedPacks = plannerData.addedPacks || {};
+
+    // Render attraction list (respects active category + search)
+    filterAndRender();
+
+    // Render pack cards
+    const cardsList = document.getElementById('cards-list');
+    Object.entries(PACKS).forEach(([packId, pack]) => {
+      cardsList.appendChild(renderPackCard(packId, pack, addedPacks));
+    });
+  }
+
+  async function reinit() {
+    document.getElementById('cards-list').innerHTML = '';
+    await init();
+  }
+
+  reinit();
+  window.addEventListener('pageshow', (e) => { if (e.persisted) reinit(); });
+
+  // ── Back / Done → return to Planner ──
+  function goBack() {
+    window.location.href = 'planner.html';
+  }
+  document.getElementById('btn-back').addEventListener('click', goBack);
+  document.getElementById('btn-done').addEventListener('click', goBack);
+
+  // ── Category chips: mouse drag-to-scroll ──
+  const cats = document.getElementById('categories');
+  let catDown = false, catStartX, catScrollLeft;
+  cats.addEventListener('mousedown', e => {
+    catDown = true;
+    catStartX = e.pageX - cats.offsetLeft;
+    catScrollLeft = cats.scrollLeft;
+    cats.classList.add('dragging');
+  });
+  cats.addEventListener('mouseleave', () => { catDown = false; cats.classList.remove('dragging'); });
+  cats.addEventListener('mouseup',    () => { catDown = false; cats.classList.remove('dragging'); });
+  cats.addEventListener('mousemove',  e => {
+    if (!catDown) return;
+    e.preventDefault();
+    cats.scrollLeft = catScrollLeft - (e.pageX - cats.offsetLeft - catStartX);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planner — muvmi Tourist</title>
+  <!-- SortableJS for smooth drag-to-reorder -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone Frame ── */
+    .phone {
+      width: 393px;
+      min-height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Notch */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      height: 44px;
+      background: #fff;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 6px;
+      flex-shrink: 0;
+    }
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4F4F4F;
+      letter-spacing: -0.2px;
+    }
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .status-icons svg { display: block; }
+
+    /* ── Nav Bar ── */
+    .nav-bar {
+      height: 64px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      /* box-shadow: 0 0 4px rgba(0,0,0,0.1); */
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .btn-back {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      color: #4F4F4F;
+    }
+    .btn-back svg { display: block; }
+    .nav-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      font-weight: 600;
+      color: #4F4F4F;
+      white-space: nowrap;
+    }
+    .btn-add-stop {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0D57E2;
+      letter-spacing: 0.25px;
+      padding: 4px;
+    }
+    .btn-add-stop:hover { opacity: 0.75; }
+
+    /* ── Action Bar ── */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #EEEEEE;
+      background: #fff;
+      flex-shrink: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .action-bar::-webkit-scrollbar { display: none; }
+    .action-bar.dragging { cursor: grabbing; user-select: none; }
+    .normal-actions { flex-shrink: 0; }
+    .edit-actions   { flex-shrink: 0; margin-left: auto; }
+    .btn-auto-arrange {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0D57E2;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 5px 16px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .btn-auto-arrange:hover { opacity: 0.85; }
+    .btn-auto-arrange svg { flex-shrink: 0; }
+    .btn-auto-arrange.arranging {
+      pointer-events: none;
+      opacity: 0.75;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .btn-auto-arrange.arranging .arrange-icon { display: none; }
+    .btn-auto-arrange.arranging .arrange-spinner { display: block; }
+    .arrange-spinner {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .btn-map {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #4F4F4F;
+      border: 1px solid #E7EEFC;
+      border-radius: 16px;
+      padding: 5px 16px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-map:hover { background: #F5F8FF; }
+
+    /* ── List ── */
+    .place-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      list-style: none;
+      scrollbar-width: none;
+    }
+    .place-list::-webkit-scrollbar { display: none; }
+
+    /* ── Card wrapper (li) ── */
+    .place-card {
+      background: #fff;
+      user-select: none;
+      border-radius: 0;
+      transition: border-radius .2s;
+      overflow: hidden;
+    }
+    /* Expanded: card gets rounded corners like Figma */
+    .place-card.expanded {
+      border-radius: 16px;
+    }
+
+    /* ── Card row (drag handle + thumbnail + info) ── */
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 16px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .place-card.expanded .card-row {
+      background: #fff;
+    }
+
+    /* ── Inline tray ── */
+    .card-tray {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows .25s cubic-bezier(0.4,0,0.2,1);
+      background: #E7EEFC;
+      border-radius: 0 0 16px 16px;
+    }
+    .card-tray-inner {
+      overflow: hidden;
+    }
+    .place-card.expanded .card-tray {
+      grid-template-rows: 1fr;
+    }
+    .card-tray-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 8px;
+    }
+    .tray-actions {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .btn-ride {
+      flex: 1;
+      background: #0D57E2;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 4px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .btn-ride:hover { opacity: 0.85; }
+    .btn-more {
+      flex: 1;
+      background: #fff;
+      color: #0D57E2;
+      border: 1.5px solid #0D57E2;
+      border-radius: 16px;
+      padding: 4px 10px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-more:hover { background: #EEF3FF; }
+    .tray-icon-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+      padding-right: 8px;
+    }
+    .tray-icon {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      flex-shrink: 0;
+      opacity: 0.85;
+      transition: opacity .15s, transform .1s;
+    }
+    .tray-icon:hover { opacity: 1; transform: scale(1.1); }
+
+    /* Chevron rotation */
+    .chevron {
+      color: #BBBBBB;
+      font-size: 18px;
+      line-height: 22px;
+      flex-shrink: 0;
+      display: inline-block;
+      transition: transform .25s cubic-bezier(0.4,0,0.2,1);
+    }
+    .place-card.expanded .chevron {
+      transform: rotate(-90deg);
+      color: #0D57E2;
+    }
+
+    /* ── Visited state ── */
+    .place-card.visited .place-name {
+      text-decoration: line-through;
+      color: #909090;
+    }
+    .place-card.visited .category-badge { display: none; }
+    .place-card.visited .visited-badge  { display: flex; }
+
+    /* Drag ghost / active state */
+    .place-card.sortable-chosen {
+      background: #F5F8FF;
+      box-shadow: 0 4px 16px rgba(13,87,226,0.12);
+      transform: scale(1.015);
+      z-index: 100;
+    }
+    .place-card.sortable-ghost {
+      opacity: 0.35;
+      background: #EEF3FF;
+    }
+
+    /* Drag Handle — hidden until edit mode */
+    .drag-handle {
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      padding: 4px 2px;
+      cursor: grab;
+      flex-shrink: 0;
+      opacity: 0.45;
+      transition: opacity .15s;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .place-card:hover .drag-handle { opacity: 0.8; }
+    .drag-handle span {
+      display: block;
+      width: 14px;
+      height: 2px;
+      background: #909090;
+      border-radius: 1px;
+    }
+
+    /* Thumbnail */
+    .thumbnail {
+      width: 48px;
+      height: 48px;
+      border-radius: 9px;
+      object-fit: cover;
+      background: #EEEEEE;
+      flex-shrink: 0;
+    }
+
+    /* Card Info */
+    .card-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .name-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .place-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .chevron {
+      color: #BBBBBB;
+      font-size: 18px;
+      line-height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* Meta row */
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .distance {
+      font-size: 12px;
+      font-weight: 500;
+      color: #909090;
+      line-height: 18px;
+      letter-spacing: 0.25px;
+      min-width: 36px;
+    }
+
+    /* Category badge */
+    .badge {
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 18px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-temple   { background: #E7EEFC; color: #4F4F4F; }
+    .badge-landmark { background: #FCF8E7; color: #4F4F4F; }
+    .badge-museum   { background: #FCE7E7; color: #4F4F4F; }
+
+    /* Visited badge */
+    .badge-visited {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      background: #0D57E2;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 18px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-visited svg { display: block; }
+    /* Hide visited badge by default — shown only when .visited is on parent */
+    .visited-badge { display: none; }
+
+    /* Hours */
+    .hours-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      white-space: nowrap;
+    }
+    .open-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #4BCD82;
+      line-height: 18px;
+      letter-spacing: 0.25px;
+    }
+    .hours-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #909090;
+      line-height: 18px;
+      letter-spacing: 0.25px;
+    }
+
+    /* ── Home Indicator ── */
+    .home-indicator {
+      height: 34px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-indicator-bar {
+      width: 130px;
+      height: 5px;
+      background: #1a1a1a;
+      border-radius: 100px;
+    }
+
+    /* ── Hint label ── */
+    .drag-hint { display: none; }
+
+    /* ── Edit button (in normal action bar) ── */
+    .btn-edit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      color: #4F4F4F;
+      border: 1px solid #E7EEFC;
+      border-radius: 16px;
+      padding: 5px 16px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-edit:hover { background: #F5F8FF; }
+
+    /* ── Done button (nav bar, edit mode only) ── */
+    .btn-done {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0D57E2;
+      letter-spacing: 0.25px;
+      padding: 4px;
+    }
+    body.edit-mode .btn-done    { display: block; }
+    body.edit-mode .btn-add-stop { display: none; }
+    body.edit-mode .btn-back     { visibility: hidden; }
+
+    /* ── Action bar: swap normal ↔ edit actions ── */
+    .normal-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .edit-actions {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    body.edit-mode .normal-actions { display: none; }
+    body.edit-mode .edit-actions   { display: flex; }
+
+    /* Delete toolbar button */
+    .btn-delete-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #F05555;
+      color: #fff;
+      border: 1px solid #F05555;
+      border-radius: 16px;
+      padding: 5px 16px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity .15s;
+    }
+    .btn-delete-toolbar.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Select all toolbar button */
+    .btn-select-all {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      color: #4F4F4F;
+      border: 1.5px solid #0D57E2;
+      border-radius: 16px;
+      padding: 5px 16px;
+      height: 32px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-select-all:hover { background: #F5F8FF; }
+    .btn-select-all.all-selected {
+      background: #0D57E2;
+      color: #fff;
+      border-color: #0D57E2;
+    }
+    .btn-select-all.all-selected:hover { background: #0a49c4; }
+    .select-all-radio {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.6px solid #909090;
+      flex-shrink: 0;
+      position: relative;
+      transition: border-color .15s, background .15s;
+    }
+    .btn-select-all.all-selected .select-all-radio {
+      border-color: #fff;
+      background: #fff;
+    }
+    .btn-select-all.all-selected .select-all-radio::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 4px;
+      width: 4px; height: 7px;
+      border: 1.5px solid #0D57E2;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    /* ── Tap hint (normal mode) ── */
+    .tap-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #BBBBBB;
+      padding: 8px 16px 2px;
+      letter-spacing: 0.2px;
+      flex-shrink: 0;
+      line-height: 16px;
+    }
+    body.edit-mode .tap-hint { display: none; }
+
+    /* ── Reorder hint (edit mode only) ── */
+    .reorder-hint {
+      display: none;
+      text-align: center;
+      font-size: 11px;
+      color: #BBBBBB;
+      padding: 8px 0 2px;
+      letter-spacing: 0.2px;
+      flex-shrink: 0;
+    }
+    body.edit-mode .reorder-hint { display: block; }
+
+    /* ── Per-card checkbox (right of name-row) ── */
+    .card-checkbox {
+      display: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      appearance: none;
+      border: 1px solid #909090;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: border-color .15s, background .15s;
+    }
+    .card-checkbox:checked {
+      border-color: #0D57E2;
+      background: #0D57E2;
+    }
+    .card-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 6px;
+      width: 5px; height: 8px;
+      border: 2px solid white;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    /* ── Edit mode: show/hide elements ── */
+    body.edit-mode .drag-handle   { display: flex; }
+    body.edit-mode .card-checkbox { display: block; }
+    body.edit-mode .chevron       { display: none; }
+
+    /* In edit mode: no expand on click */
+    body.edit-mode .card-row { cursor: pointer; }
+    body.edit-mode .place-card.expanded .card-tray {
+      grid-template-rows: 0fr;
+    }
+
+    /* Keep drag-hint hidden always */
+    .drag-hint { display: none; }
+
+    /* ── Delete confirmation overlay ── */
+    .delete-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 300;
+      align-items: flex-end;
+      border-radius: inherit;
+    }
+    .delete-overlay.visible { display: flex; }
+
+    .delete-sheet {
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      padding: 24px 16px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .delete-overlay.visible .delete-sheet { transform: translateY(0); }
+
+    .delete-sheet-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      text-align: center;
+    }
+    .delete-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0D57E2;
+      line-height: 24px;
+      letter-spacing: 0.25px;
+    }
+    .delete-subtitle {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+    }
+
+    /* Preview area wrapper */
+    .delete-preview-area {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .delete-count-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+    }
+    /* Scrollable list of cards — collapsed to 1 card by default */
+    .delete-preview-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 116px;
+      overflow: hidden;
+      transition: max-height .35s ease;
+    }
+    .delete-preview-list.expanded {
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    /* Fade gradient hinting hidden content below */
+    .see-more-gradient {
+      height: 56px;
+      margin-top: -56px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+      pointer-events: none;
+      position: relative;
+      z-index: 1;
+      transition: opacity .25s;
+    }
+    .delete-preview-list.expanded ~ .see-more-gradient {
+      opacity: 0;
+    }
+    /* Individual card */
+    .delete-preview-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border: 1px solid #E7EEFC;
+      border-radius: 16px;
+      min-height: 80px;
+      flex-shrink: 0;
+    }
+    .delete-preview-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 9px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #EEE;
+    }
+    .delete-preview-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .delete-preview-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .delete-preview-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .delete-preview-dist {
+      font-size: 12px;
+      color: #939598;
+      line-height: 18px;
+      flex-shrink: 0;
+    }
+    .delete-preview-tag {
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 18px;
+      background: #E7EEFC;
+      color: #4F4F4F;
+      white-space: nowrap;
+    }
+    /* See more toggle */
+    .btn-see-more {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0D57E2;
+      letter-spacing: 0.25px;
+      padding: 2px 0;
+      width: 100%;
+    }
+    .btn-see-more svg { transition: transform .25s; flex-shrink: 0; }
+    .btn-see-more.expanded svg { transform: rotate(180deg); }
+
+    .delete-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .btn-confirm-remove {
+      width: 100%;
+      background: #F05555;
+      color: #fff;
+      border: 1px solid #F05555;
+      border-radius: 24px;
+      padding: 8px 16px;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 28px;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-confirm-remove:hover { opacity: 0.85; }
+    .btn-cancel-remove {
+      width: 100%;
+      background: #fff;
+      color: #0D57E2;
+      border: 1px solid #0D57E2;
+      border-radius: 24px;
+      padding: 8px 16px;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 28px;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-cancel-remove:hover { background: #F5F8FF; }
+
+    /* ── Empty State ── */
+    .empty-state {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 32px 32px 48px;
+      text-align: center;
+    }
+    .empty-state.visible { display: flex; }
+    .empty-illustration {
+      width: 128px;
+      height: 88px;
+      flex-shrink: 0;
+    }
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 24px;
+      letter-spacing: 0.25px;
+    }
+    .empty-subtitle {
+      font-size: 14px;
+      font-weight: 500;
+      color: #909090;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+      max-width: 220px;
+    }
+    .btn-add-first-stop {
+      width: 225px;
+      background: #0D57E2;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      padding: 10px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+      letter-spacing: 0.25px;
+      cursor: pointer;
+      transition: opacity .15s;
+      margin-top: 8px;
+    }
+    .btn-add-first-stop:hover { opacity: 0.85; }
+
+    /* ── Auto-arrange disabled (empty state) ── */
+    .btn-auto-arrange.disabled {
+      background: #CCCCCC;
+      color: #909090;
+      cursor: default;
+      pointer-events: none;
+    }
+    .btn-auto-arrange.disabled svg path { fill: #909090; }
+
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">5:13</span>
+    <div class="status-icons">
+      <!-- Signal -->
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="7" width="3" height="5" rx="1" fill="#4F4F4F"/>
+        <rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="#4F4F4F"/>
+        <rect x="9" y="2" width="3" height="10" rx="1" fill="#4F4F4F"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#4F4F4F" opacity="0.3"/>
+      </svg>
+      <!-- WiFi -->
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#4F4F4F"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#4F4F4F"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#4F4F4F"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#4F4F4F" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="15" height="8" rx="2" fill="#4F4F4F"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#4F4F4F" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nav Bar -->
+  <div class="nav-bar">
+    <button class="btn-back" aria-label="Back" onclick="window.location.href='index.html'">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="#4F4F4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span class="nav-title">Planner</span>
+    <button class="btn-add-stop" aria-label="Add Stop" onclick="window.location.href='add-stop.html'">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M5 1v8M1 5h8" stroke="#0D57E2" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Add Stop
+    </button>
+    <button class="btn-done" id="btn-done" onclick="toggleEditMode()">Done</button>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <div class="normal-actions">
+      <button class="btn-auto-arrange" id="btn-auto-arrange">
+        <svg class="arrange-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 1l1.2 4.8L14 8l-4.8 1.2L8 15l-1.2-4.8L2 8l4.8-1.2L8 1z" fill="white"/>
+        </svg>
+        <div class="arrange-spinner"></div>
+        Auto-arrange route
+      </button>
+      <button class="btn-map" onclick="window.location.href='map.html'">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M1 3l4-2 6 2 4-2v12l-4 2-6-2-4 2V3z" stroke="#4F4F4F" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M5 1v12M11 3v12" stroke="#4F4F4F" stroke-width="1.3"/>
+        </svg>
+        Map
+      </button>
+      <button class="btn-edit" id="btn-edit" onclick="toggleEditMode()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Edit
+      </button>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-delete-toolbar" id="btn-delete-toolbar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 11v5M14 11v5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Delete
+      </button>
+      <button class="btn-select-all" id="btn-select-all" onclick="toggleSelectAll()">
+        <span class="select-all-radio" id="select-all-radio"></span>
+        Select all
+      </button>
+    </div>
+  </div>
+
+  <!-- Tap hint (normal mode) -->
+  <p class="tap-hint">Tap a place to request, view details, mark as visited, or remove it</p>
+
+  <!-- Reorder hint (edit mode only) -->
+  <p class="reorder-hint">≡ Hold and drag to reorder</p>
+
+  <p class="drag-hint">Hold ≡ and drag to reorder</p>
+
+  <!-- Place List -->
+  <ul class="place-list" id="planner-list"></ul>
+
+  <!-- Empty State -->
+  <div class="empty-state" id="empty-state">
+    <div class="empty-illustration">
+      <svg width="128" height="88" viewBox="0 0 128 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_2525_20354)">
+<path d="M51.483 44.2627C51.483 44.2627 60.2222 59.3161 54.1617 63.9398C50.4952 66.7317 46.6061 67.2474 46.6061 67.2474L35.3484 70.6974C34.3339 70.8219 33.3549 70.2617 32.9456 69.3281L30.3647 63.3885C30.3647 63.3885 29.1811 60.8277 32.5362 60.1342C35.8913 59.4406 36.3807 64.6511 36.3807 64.6511L41.0974 61.2012C41.0974 61.2012 40.6168 57.5112 42.3077 52.852L32.1357 51.6427C32.1357 51.6427 29.279 53.0831 28.5493 51.6427C27.8195 50.2023 30.4982 49.5443 30.4982 49.5443C30.4982 49.5443 28.1933 49.811 28.1488 48.3173C28.1043 46.8235 30.5783 47.8015 30.5783 47.8015C30.5783 47.8015 28.9675 46.5834 29.9999 45.6765C31.0322 44.7695 32.2247 46.8679 32.2247 46.8679L40.6346 46.4589L42.6014 46.2277L51.4741 44.2805L51.483 44.2627Z" fill="#0D57E2"/>
+<path d="M35.0725 71.3907C33.8978 71.3907 32.8031 70.6882 32.3315 69.6035L29.7417 63.6639C29.7417 63.6639 29.1633 62.3746 29.7684 61.1831C30.2045 60.3295 31.0856 59.7516 32.3938 59.4848C33.3371 59.2892 34.1914 59.4582 34.9212 60.0006C36.0603 60.8364 36.6032 62.4102 36.8435 63.4861L40.3943 60.8897C40.3231 59.8583 40.2608 56.9863 41.4088 53.4208L32.2425 52.336C31.6907 52.5939 30.1333 53.2163 28.9942 52.8428C28.5225 52.6917 28.1665 52.3805 27.953 51.9537C27.7127 51.4735 27.6949 50.9756 27.8996 50.5132C28.0153 50.2643 28.1932 50.042 28.3979 49.8553C28.2822 49.793 28.1754 49.7219 28.0776 49.633C27.7038 49.304 27.4991 48.8594 27.4813 48.3437C27.4635 47.8191 27.6682 47.3834 28.0509 47.1167C28.3356 46.9121 28.6916 46.8321 29.0565 46.8232C29.0209 46.6987 28.9942 46.5654 28.9942 46.4231C28.9853 46.0941 29.0743 45.6051 29.5638 45.1694C29.9286 44.8493 30.3558 44.7248 30.8097 44.796C31.6106 44.9293 32.2514 45.694 32.5895 46.183L40.6079 45.7918L42.5302 45.5606L51.3317 43.6223C51.6165 43.56 51.9101 43.6845 52.0525 43.9424C52.4263 44.5737 61.0142 59.5649 54.5622 64.4819C51.0024 67.1938 47.2736 67.834 46.7485 67.9141L35.5441 71.3462C35.5441 71.3462 35.473 71.364 35.4285 71.3729C35.3128 71.3907 35.1882 71.3907 35.0725 71.3907ZM33.1324 60.7386C32.99 60.7386 32.8298 60.7563 32.6696 60.7919C31.7797 60.9786 31.2101 61.3076 30.9699 61.7789C30.6584 62.3924 30.9699 63.1126 30.9699 63.1215L33.5596 69.07C33.8444 69.7191 34.5118 70.1192 35.2149 70.0569L46.4103 66.6248C46.4103 66.6248 46.4815 66.607 46.5171 66.5981C46.5527 66.5981 50.2904 66.0646 53.7612 63.4149C58.7538 59.6093 52.4708 47.4545 51.1448 45.0271L42.7616 46.8677L40.7236 47.1078L32.2692 47.5257C32.02 47.5434 31.7797 47.4101 31.6551 47.1878C31.4148 46.7699 30.9076 46.1564 30.5872 46.103C30.5605 46.103 30.5249 46.0941 30.4448 46.1653C30.3202 46.272 30.3291 46.3342 30.3291 46.3698C30.3291 46.6276 30.7207 47.0544 30.9877 47.2678C31.2457 47.4723 31.3258 47.8369 31.1656 48.1214C31.0055 48.4059 30.6495 48.5393 30.3469 48.4148C29.715 48.1659 28.9853 48.0858 28.8251 48.1925C28.8251 48.1925 28.8251 48.2281 28.8251 48.2903C28.8251 48.4771 28.8963 48.5571 28.9586 48.6104C29.2879 48.895 30.0888 48.9128 30.427 48.8772C30.7652 48.8327 31.0944 49.0817 31.1567 49.4196C31.219 49.7663 31.0055 50.0953 30.6584 50.1842C30.1333 50.3176 29.2879 50.6822 29.1099 51.0556C29.0832 51.109 29.0654 51.189 29.1366 51.3402C29.4392 51.9359 31.0322 51.438 31.8242 51.0467C31.9399 50.9845 32.0734 50.9667 32.2069 50.9845L42.3789 52.1937C42.5836 52.2204 42.7616 52.336 42.8683 52.505C42.9751 52.6739 42.9929 52.8873 42.9306 53.0829C41.3288 57.5198 41.747 61.0853 41.7559 61.1209C41.7826 61.361 41.6847 61.601 41.4889 61.7433L36.7723 65.1932C36.5765 65.3355 36.3273 65.3622 36.1048 65.2644C35.8823 65.1666 35.7399 64.9621 35.7132 64.722C35.642 63.9751 35.2238 61.8767 34.1291 61.0764C33.8355 60.8542 33.5062 60.7474 33.1324 60.7474V60.7386Z" fill="#0D57E2"/>
+<path d="M118.157 26.6309H114.144C112.94 26.6309 111.963 27.6062 111.963 28.8093V56.9156C111.963 58.1187 112.94 59.094 114.144 59.094H118.157C119.362 59.094 120.338 58.1187 120.338 56.9156V28.8093C120.338 27.6062 119.362 26.6309 118.157 26.6309Z" fill="white"/>
+<path d="M118.148 59.7608H114.144C112.569 59.7608 111.296 58.4804 111.296 56.9155V28.8092C111.296 27.2354 112.577 25.9639 114.144 25.9639H118.148C119.724 25.9639 120.996 27.2443 120.996 28.8092V56.9155C120.996 58.4893 119.715 59.7608 118.148 59.7608ZM114.144 27.2976C113.307 27.2976 112.631 27.9734 112.631 28.8092V56.9155C112.631 57.7513 113.307 58.427 114.144 58.427H118.148C118.985 58.427 119.661 57.7513 119.661 56.9155V28.8092C119.661 27.9734 118.985 27.2976 118.148 27.2976H114.144Z" fill="#0D57E2"/>
+<path d="M124.324 50.8955H65.7842V72.1197H124.324V50.8955Z" fill="white"/>
+<path d="M124.316 72.7865H65.7754C65.4105 72.7865 65.1079 72.4841 65.1079 72.1196V50.8954C65.1079 50.5308 65.4105 50.2285 65.7754 50.2285H124.316C124.68 50.2285 124.983 50.5308 124.983 50.8954V72.1196C124.983 72.4841 124.68 72.7865 124.316 72.7865ZM66.4517 71.4527H123.657V51.5623H66.4517V71.4527Z" fill="#0D57E2"/>
+<path d="M16.3615 86.4569C22.1511 84.0609 24.9005 77.4292 22.5023 71.6447C20.1042 65.8602 13.4667 63.1132 7.6771 65.5093C1.8875 67.9053 -0.861837 74.5369 1.5363 80.3215C3.93443 86.106 10.5719 88.8529 16.3615 86.4569Z" fill="#0D57E2"/>
+<path d="M12.0142 88.0004C5.38413 88.0004 0 82.6121 0 75.9968C0 69.3815 5.39303 63.9932 12.0142 63.9932C18.6353 63.9932 24.0284 69.3815 24.0284 75.9968C24.0284 82.6121 18.6353 88.0004 12.0142 88.0004ZM12.0142 65.318C6.12278 65.318 1.33491 70.1106 1.33491 75.9879C1.33491 81.8652 6.13168 86.6578 12.0142 86.6578C17.8967 86.6578 22.6935 81.8652 22.6935 75.9879C22.6935 70.1106 17.8967 65.318 12.0142 65.318Z" fill="#0D57E2"/>
+<path d="M17.4517 75.9883C17.4517 78.9848 15.0222 81.4122 12.0231 81.4122C9.02402 81.4122 6.59448 78.9848 6.59448 75.9883C6.59448 72.9919 9.02402 70.5645 12.0231 70.5645C15.0222 70.5645 17.4517 72.9919 17.4517 75.9883Z" fill="white"/>
+<path d="M12.0143 82.0877C8.65033 82.0877 5.91821 79.358 5.91821 75.997C5.91821 72.636 8.65033 69.9062 12.0143 69.9062C15.3783 69.9062 18.1104 72.636 18.1104 75.997C18.1104 79.358 15.3694 82.0877 12.0143 82.0877ZM12.0143 71.2311C9.38898 71.2311 7.25312 73.3651 7.25312 75.9881C7.25312 78.6111 9.38898 80.7451 12.0143 80.7451C14.6396 80.7451 16.7755 78.6111 16.7755 75.9881C16.7755 73.3651 14.6396 71.2311 12.0143 71.2311Z" fill="#0D57E2"/>
+<path d="M124.316 11.2305H120.213V57.4045H124.316V11.2305Z" fill="white"/>
+<path d="M124.316 58.0801H120.213C119.848 58.0801 119.546 57.7778 119.546 57.4132V11.2303C119.546 10.8658 119.848 10.5635 120.213 10.5635H124.316C124.681 10.5635 124.983 10.8658 124.983 11.2303V57.4043C124.983 57.7689 124.681 58.0712 124.316 58.0712V58.0801ZM120.881 56.7464H123.648V11.8972H120.881V56.7375V56.7464Z" fill="#0D57E2"/>
+<path d="M69.9225 41.1768H65.9089C64.7047 41.1768 63.7285 42.1521 63.7285 43.3552V60.7827C63.7285 61.9858 64.7047 62.9611 65.9089 62.9611H69.9225C71.1267 62.9611 72.1028 61.9858 72.1028 60.7827V43.3552C72.1028 42.1521 71.1267 41.1768 69.9225 41.1768Z" fill="white"/>
+<path d="M69.9136 63.6278H65.9088C64.3336 63.6278 63.061 62.3474 63.061 60.7825V43.3639C63.061 41.7901 64.3425 40.5186 65.9088 40.5186H69.9136C71.4888 40.5186 72.7614 41.7989 72.7614 43.3639V60.7825C72.7614 62.3563 71.4799 63.6278 69.9136 63.6278ZM65.9088 41.8434C65.0723 41.8434 64.3959 42.5192 64.3959 43.355V60.7736C64.3959 61.6094 65.0723 62.2852 65.9088 62.2852H69.9136C70.7501 62.2852 71.4265 61.6094 71.4265 60.7736V43.355C71.4265 42.5192 70.7501 41.8434 69.9136 41.8434H65.9088Z" fill="#0D57E2"/>
+<path d="M61.5482 31.8857H57.5346C56.3304 31.8857 55.3542 32.8611 55.3542 34.0642V62.1705C55.3542 63.3736 56.3304 64.3489 57.5346 64.3489H61.5482C62.7524 64.3489 63.7286 63.3736 63.7286 62.1705V34.0642C63.7286 32.8611 62.7524 31.8857 61.5482 31.8857Z" fill="white"/>
+<path d="M61.5393 65.0157H57.5346C55.9594 65.0157 54.6868 63.7353 54.6868 62.1703V34.0641C54.6868 32.4902 55.9683 31.2188 57.5346 31.2188H61.5393C63.1145 31.2188 64.3871 32.4991 64.3871 34.0641V62.1703C64.3871 63.7442 63.1056 65.0157 61.5393 65.0157ZM57.5346 32.5525C56.698 32.5525 56.0217 33.2282 56.0217 34.0641V62.1703C56.0217 63.0062 56.698 63.6819 57.5346 63.6819H61.5393C62.3758 63.6819 63.0522 63.0062 63.0522 62.1703V34.0641C63.0522 33.2282 62.3758 32.5525 61.5393 32.5525H57.5346Z" fill="#0D57E2"/>
+<path d="M65.7752 11.2305H61.6726V57.4045H65.7752V11.2305Z" fill="white"/>
+<path d="M65.7842 58.0801H61.6816C61.3167 58.0801 61.0142 57.7778 61.0142 57.4132V11.2303C61.0142 10.8658 61.3167 10.5635 61.6816 10.5635H65.7842C66.1491 10.5635 66.4517 10.8658 66.4517 11.2303V57.4043C66.4517 57.7689 66.1491 58.0712 65.7842 58.0712V58.0801ZM62.3402 56.7464H65.1079V11.8972H62.3402V56.7375V56.7464Z" fill="#0D57E2"/>
+<path d="M124.316 50.8947H92.0198C89.5725 50.8947 87.49 52.4686 87.134 54.5848L84.1349 72.1101H73.8027L71.1329 54.5848C70.8125 52.4597 68.9615 50.8947 66.7811 50.8947H60.6494C58.4691 50.8947 56.6269 52.4686 56.2976 54.5848L54.6512 62.5072L31.5929 58.6038V51.4816C31.5929 48.8141 29.8842 46.449 27.3568 45.6043L19.8991 43.1235C19.7122 43.0613 19.5253 43.0168 19.3384 42.9635L30.1067 15.1417C30.6585 13.6301 27.695 11.9585 26.191 11.4072C24.6781 10.8559 23.005 11.6295 22.4532 13.1411L11.685 41.0073C11.4269 41.6831 11.329 42.4211 11.4091 43.1413L14.9243 75.0176C14.9243 76.627 16.2325 77.9252 17.8344 77.9252H121.397C123.007 77.9252 124.289 76.6181 124.298 75.0176H124.316V50.8859V50.8947Z" fill="white"/>
+<path d="M121.406 78.6013H17.8434C15.8677 78.6013 14.2658 77.0008 14.2658 75.0269L10.7506 43.2217C10.6616 42.3948 10.7684 41.5501 11.0709 40.7765L21.8392 12.9103C22.1596 12.0211 22.8181 11.3098 23.6903 10.9097C24.5535 10.5096 25.5324 10.4651 26.4313 10.7941C27.8997 11.3276 31.5484 13.2037 30.7475 15.3822L20.2373 42.5371L27.5882 44.9822C30.4004 45.9159 32.2871 48.53 32.2871 51.4909V58.044L54.1529 61.7429L55.6658 54.4518C56.0307 52.0155 58.1398 50.2283 60.6673 50.2283H66.7989C69.3264 50.2283 71.4355 52.0155 71.8093 54.4873L74.3901 71.4525H83.5832L86.4844 54.4785C86.9027 52.0155 89.2343 50.2283 92.0287 50.2283H124.325C124.69 50.2283 124.992 50.5306 124.992 50.8951V75.0269C124.992 75.0802 124.992 75.1336 124.974 75.1781C124.894 77.0809 123.328 78.6013 121.415 78.6013H121.406ZM25.1943 11.8967C24.8739 11.8967 24.5535 11.9678 24.2509 12.1101C23.7081 12.359 23.2898 12.8125 23.0851 13.3727L12.3079 41.2478C12.0855 41.8257 12.0054 42.457 12.0677 43.0705L15.5829 74.9469C15.5829 76.2539 16.5975 77.2587 17.8345 77.2587H121.397C122.625 77.2587 123.622 76.2539 123.63 75.018C123.63 74.9735 123.63 74.9291 123.648 74.8846V51.5531H92.0198C89.9107 51.5531 88.0952 52.9046 87.7926 54.6918L84.7935 72.2172C84.7401 72.5373 84.4642 72.7684 84.135 72.7684H73.8028C73.4735 72.7684 73.1887 72.5284 73.1442 72.1994L70.4744 54.6741C70.1985 52.8602 68.65 51.5442 66.7811 51.5442H60.6495C58.8162 51.5442 57.2321 52.8869 56.9562 54.6741L55.3009 62.632C55.2297 62.9877 54.8827 63.2189 54.5356 63.1566L31.4772 59.2532C31.1569 59.1999 30.9255 58.9242 30.9255 58.5953V51.4731C30.9255 49.0902 29.4037 46.9828 27.1432 46.2271L19.6855 43.7463C19.5699 43.7107 19.4542 43.6752 19.3296 43.6396L19.1427 43.5863C18.9647 43.5329 18.8134 43.4084 18.7333 43.2395C18.6532 43.0706 18.6443 42.8749 18.7066 42.706L29.4749 14.8842C29.5995 14.5552 29.2346 14.004 28.4959 13.426C27.6683 12.7769 26.6004 12.2612 25.9418 12.0211C25.6926 11.9322 25.4257 11.8789 25.1676 11.8789L25.1943 11.8967Z" fill="#0D57E2"/>
+<path d="M102.565 87.3336C110.071 87.3336 116.155 81.2548 116.155 73.7562C116.155 66.2575 110.071 60.1787 102.565 60.1787C95.0602 60.1787 88.9761 66.2575 88.9761 73.7562C88.9761 81.2548 95.0602 87.3336 102.565 87.3336Z" fill="#0D57E2"/>
+<path d="M102.565 88.0004C94.7073 88.0004 88.3086 81.6162 88.3086 73.756C88.3086 65.8959 94.6984 59.5117 102.565 59.5117C110.432 59.5117 116.813 65.8959 116.813 73.756C116.813 81.6162 110.424 88.0004 102.565 88.0004ZM102.565 60.8543C95.4459 60.8543 89.6435 66.6428 89.6435 73.7649C89.6435 80.8871 95.437 86.6755 102.565 86.6755C109.694 86.6755 115.478 80.8871 115.478 73.7649C115.478 66.6428 109.685 60.8543 102.565 60.8543Z" fill="#0D57E2"/>
+<path d="M12.7617 55.3503C12.7617 55.3503 5.8291 54.6478 1.69088 60.045C1.4506 60.3562 1.61079 60.8186 1.99346 60.9164C1.99346 60.9164 9.06848 59.7249 13.8742 65.3889L12.7617 55.3414V55.3503Z" fill="white"/>
+<path d="M13.8741 66.0646C13.6783 66.0646 13.4914 65.9845 13.3668 65.8245C8.87261 60.5251 2.17137 61.5654 2.10017 61.5743C2.00228 61.5921 1.90439 61.5832 1.81539 61.5565C1.42382 61.4498 1.11234 61.1564 0.978849 60.7652C0.845358 60.3828 0.916553 59.9561 1.16574 59.636C5.48194 53.9987 12.5392 54.6478 12.8328 54.6833C13.1443 54.7189 13.3935 54.959 13.4291 55.2702L14.5415 65.3177C14.5771 65.6111 14.408 65.8867 14.1411 66.0023C14.0521 66.0379 13.9631 66.0557 13.8741 66.0557V66.0646ZM3.65757 60.1428C5.85572 60.1428 9.69136 60.6318 12.993 63.5483L12.1565 55.9904C10.5279 55.9726 5.63323 56.2483 2.42055 60.1961C2.72313 60.1694 3.1503 60.1428 3.65757 60.1428Z" fill="#0D57E2"/>
+<path d="M102.565 79.9355C105.981 79.9355 108.751 77.1687 108.751 73.7558C108.751 70.3429 105.981 67.5762 102.565 67.5762C99.1495 67.5762 96.3804 70.3429 96.3804 73.7558C96.3804 77.1687 99.1495 79.9355 102.565 79.9355Z" fill="white"/>
+<path d="M102.565 80.6022C98.7832 80.6022 95.7129 77.5346 95.7129 73.7557C95.7129 69.9768 98.7832 66.9092 102.565 66.9092C106.348 66.9092 109.418 69.9768 109.418 73.7557C109.418 77.5346 106.348 80.6022 102.565 80.6022ZM102.565 68.2429C99.5218 68.2429 97.0478 70.7148 97.0478 73.7557C97.0478 76.7966 99.5218 79.2685 102.565 79.2685C105.609 79.2685 108.083 76.7966 108.083 73.7557C108.083 70.7148 105.609 68.2429 102.565 68.2429Z" fill="#0D57E2"/>
+<path d="M10.9552 51.8556C7.72473 51.8556 7.53784 50.184 7.53784 48.1212C7.53784 46.0583 7.72473 44.3867 10.9552 44.3867C14.1857 44.3867 16.8021 46.0583 16.8021 48.1212C16.8021 50.184 14.1857 51.8556 10.9552 51.8556Z" fill="white"/>
+<path d="M10.9552 52.5224C6.87036 52.5224 6.87036 49.8727 6.87036 48.1211C6.87036 46.3694 6.87036 43.7197 10.9552 43.7197C14.6128 43.7197 17.4784 45.6581 17.4784 48.1211C17.4784 50.584 14.6128 52.5224 10.9552 52.5224ZM10.9552 45.0535C8.32986 45.0535 8.20527 46.1027 8.20527 48.1211C8.20527 50.1395 8.32986 51.1887 10.9552 51.1887C13.7674 51.1887 16.1435 49.7838 16.1435 48.1211C16.1435 46.4583 13.7674 45.0535 10.9552 45.0535Z" fill="#0D57E2"/>
+<path d="M10.7149 48.1207C10.7149 50.0235 9.97622 51.5618 9.05958 51.5618C8.14295 51.5618 7.4043 50.0235 7.4043 48.1207C7.4043 46.2179 8.14295 44.6797 9.05958 44.6797C9.97622 44.6797 10.7149 46.2179 10.7149 48.1207Z" fill="white"/>
+<path d="M9.05956 52.2285C7.73355 52.2285 6.73682 50.4591 6.73682 48.1206C6.73682 45.7821 7.73355 44.0127 9.05956 44.0127C10.3856 44.0127 11.3823 45.7821 11.3823 48.1206C11.3823 50.4591 10.3856 52.2285 9.05956 52.2285ZM9.05956 45.3464C8.76588 45.3464 8.07173 46.2889 8.07173 48.1206C8.07173 49.9523 8.76588 50.8948 9.05956 50.8948C9.39774 50.8948 10.0474 49.81 10.0474 48.1206C10.0474 46.4312 9.39774 45.3464 9.05956 45.3464Z" fill="#0D57E2"/>
+<path d="M29.1011 0.666992H27.1077C26.4135 0.666992 25.7906 1.0849 25.5236 1.7162L23.2275 7.18452H32.9813L30.6852 1.7162C30.4182 1.076 29.7953 0.666992 29.1011 0.666992Z" fill="white"/>
+<path d="M32.9813 7.85127H23.2276C23.0051 7.85127 22.7915 7.73568 22.6758 7.55785C22.5512 7.37112 22.5334 7.13994 22.6135 6.92654L24.9095 1.45822C25.2833 0.569061 26.1466 0 27.1077 0H29.1012C30.0623 0 30.9255 0.577953 31.2993 1.45822L33.5954 6.92654C33.6843 7.13105 33.6576 7.37112 33.5331 7.55785C33.4085 7.74457 33.2038 7.85127 32.9813 7.85127ZM24.2332 6.51753H31.9757L30.0712 1.98282C29.911 1.59159 29.5283 1.34263 29.1012 1.34263H27.1077C26.6805 1.34263 26.3067 1.59159 26.1377 1.98282L24.2332 6.51753Z" fill="#0D57E2"/>
+<path d="M49.9611 3.53917C49.7742 3.53917 49.5873 3.54806 49.4004 3.57473L14.5504 8.29616C13.2244 8.47399 12.6459 10.0567 13.527 11.0526L14.586 12.2351C17.238 15.2049 21.2249 16.6187 25.1585 15.9785L50.2548 11.8973H126.158C127.128 11.8973 127.688 10.7858 127.11 10.0122L124.057 5.92211C122.936 4.41943 121.174 3.53027 119.296 3.53027H49.9611V3.53917Z" fill="#0D57E2"/>
+<path d="M23.2541 16.8141C19.7745 16.8141 16.4461 15.347 14.0877 12.6973L13.0287 11.5147C12.4502 10.8656 12.2812 9.96755 12.5837 9.15842C12.8863 8.34929 13.5983 7.77133 14.4615 7.65574L49.3115 2.91653C49.5251 2.88985 49.7476 2.87207 49.9612 2.87207H119.287C121.361 2.87207 123.346 3.86793 124.583 5.53065L127.635 9.62078C128.053 10.181 128.125 10.9278 127.804 11.5503C127.493 12.1816 126.852 12.5728 126.149 12.5728H50.2994L25.2565 16.6451C24.589 16.7518 23.9216 16.8052 23.2541 16.8052V16.8141ZM49.9612 4.20581C49.801 4.20581 49.6497 4.2147 49.4895 4.24137L14.6395 8.96281C14.2657 9.01615 13.9631 9.25623 13.8386 9.603C13.7051 9.95866 13.7763 10.3321 14.0254 10.6166L15.0845 11.7992C17.5941 14.6179 21.314 15.9338 25.0518 15.3292L50.1481 11.2479C50.1481 11.2479 50.2193 11.2479 50.2549 11.2479H126.158C126.443 11.2479 126.576 11.0523 126.621 10.9634C126.665 10.8745 126.745 10.6522 126.576 10.421L123.524 6.3309C122.536 5.00605 120.952 4.2147 119.296 4.2147H49.9612V4.20581Z" fill="#0D57E2"/>
+<path d="M58.7981 25.3859V14.8761C58.7981 10.2436 55.0515 6.48242 50.4416 6.48242C48.0744 6.48242 45.805 7.50495 44.2209 9.28327L44.0073 9.52334L43.7938 9.28327C42.2097 7.50495 39.9403 6.48242 37.5731 6.48242C32.9632 6.48242 29.2166 10.2525 29.2166 14.8761V35.4245C29.4301 39.5324 31.2901 46.3345 44.0073 46.3345C56.7246 46.3345 58.5846 39.5324 58.7981 35.4245V25.3859Z" fill="white"/>
+<path d="M43.9985 47.0012C34.2804 47.0012 28.9408 43.0089 28.5403 35.46V14.876C28.5403 9.87888 32.5895 5.81543 37.5643 5.81543C39.9849 5.81543 42.3076 6.8024 44.0074 8.53625C45.6983 6.8024 48.0211 5.81543 50.4506 5.81543C55.4254 5.81543 59.4746 9.87888 59.4746 14.876V25.3858V35.4244C59.0741 43.0089 53.7256 47.0012 44.0163 47.0012H43.9985ZM37.5554 7.14917C33.3193 7.14917 29.8663 10.6169 29.8663 14.876V35.4244C30.2312 42.2087 34.9834 45.6675 43.9985 45.6675C53.0136 45.6675 57.7659 42.2087 58.1308 35.3888V25.3858V14.876C58.1308 10.6169 54.6778 7.14917 50.4417 7.14917C48.2613 7.14917 46.1789 8.09167 44.7194 9.72773L44.4969 9.9678C44.3723 10.1101 44.1854 10.1901 43.9985 10.1901C43.8116 10.1901 43.6248 10.1101 43.5002 9.9678L43.2866 9.72773C41.8271 8.09167 39.7357 7.14917 37.5643 7.14917H37.5554Z" fill="#0D57E2"/>
+<path d="M41.2308 31.0676C41.2308 32.0546 40.5812 32.8637 39.7891 32.8637C38.9971 32.8637 38.3474 32.0634 38.3474 31.0676C38.3474 30.0717 38.9971 29.2715 39.7891 29.2715C40.5812 29.2715 41.2308 30.0717 41.2308 31.0676Z" fill="#0D57E2"/>
+<path d="M50.0768 31.0676C50.0768 32.0546 49.4271 32.8637 48.6351 32.8637C47.843 32.8637 47.1934 32.0634 47.1934 31.0676C47.1934 30.0717 47.843 29.2715 48.6351 29.2715C49.4271 29.2715 50.0768 30.0717 50.0768 31.0676Z" fill="#0D57E2"/>
+<path d="M44.2121 34.615C43.6069 34.615 43.1174 34.2238 43.1174 33.7348C43.1174 33.2457 43.6069 32.8545 44.2121 32.8545C44.8172 32.8545 45.3067 33.2457 45.3067 33.7348C45.3067 34.2238 44.8172 34.615 44.2121 34.615Z" fill="white"/>
+<path d="M44.2121 35.1488C43.3132 35.1488 42.5835 34.5175 42.5835 33.7351C42.5835 32.9526 43.3132 32.3213 44.2121 32.3213C45.1109 32.3213 45.8407 32.9526 45.8407 33.7351C45.8407 34.5175 45.1109 35.1488 44.2121 35.1488ZM44.2121 33.3972C43.8917 33.3972 43.6514 33.575 43.6514 33.7439C43.6514 33.9129 43.8917 34.0907 44.2121 34.0907C44.5325 34.0907 44.7727 33.9129 44.7727 33.7439C44.7727 33.575 44.5325 33.3972 44.2121 33.3972Z" fill="#0D57E2"/>
+<path d="M44.212 39.559C42.7792 39.559 41.649 39.1233 40.8481 38.2697C39.5221 36.8381 39.6555 34.7664 39.6644 34.6864C39.6822 34.3929 39.9403 34.1795 40.234 34.1973C40.5277 34.2151 40.7502 34.473 40.7324 34.7664C40.7324 34.7842 40.6256 36.4736 41.6401 37.5583C42.2275 38.1808 43.0907 38.5008 44.212 38.5008C45.3334 38.5008 46.1966 38.1808 46.784 37.5583C47.7985 36.4736 47.6917 34.7842 47.6917 34.7664C47.6739 34.473 47.8964 34.2151 48.1901 34.1973C48.4659 34.1795 48.7418 34.3929 48.7596 34.6864C48.7596 34.7753 48.902 36.847 47.576 38.2697C46.784 39.1233 45.6448 39.559 44.212 39.559Z" fill="#0D57E2"/>
+<path d="M95.4282 5.63641C94.6807 5.61863 94.0132 5.95651 93.5682 6.48111C93.1233 5.95651 92.4558 5.61863 91.7083 5.63641C90.4179 5.66309 89.4033 6.75675 89.4033 8.04603V10.1711C89.4033 10.2778 89.4923 10.3667 89.5991 10.3667H90.3022C90.409 10.3667 90.4979 10.2778 90.4979 10.1711V8.02825C90.4979 7.37027 90.9785 6.80121 91.6371 6.73897C92.3846 6.66784 93.0165 7.25468 93.0165 7.99268V9.32642C93.0165 9.61095 93.2301 9.86881 93.5148 9.89548C93.8441 9.93105 94.12 9.67319 94.12 9.35309V8.03714C94.12 7.37916 94.6006 6.8101 95.2591 6.74786C96.0067 6.67673 96.6385 7.26357 96.6385 8.00157V10.2156C96.6385 10.3045 96.7097 10.3845 96.8076 10.3845H97.573C97.662 10.3845 97.7421 10.3134 97.7421 10.2156V8.06381C97.7421 6.77453 96.7275 5.68087 95.4371 5.65419L95.4282 5.63641Z" fill="white"/>
+<path d="M115.683 5.63641C114.936 5.61863 114.268 5.95651 113.823 6.48111C113.378 5.95651 112.711 5.61863 111.963 5.63641C110.673 5.66309 109.658 6.75675 109.658 8.04603V10.1711C109.658 10.2778 109.747 10.3667 109.854 10.3667H110.557C110.664 10.3667 110.753 10.2778 110.753 10.1711V8.02825C110.753 7.37027 111.234 6.80121 111.892 6.73897C112.64 6.66784 113.272 7.25468 113.272 7.99268V9.32642C113.272 9.61095 113.485 9.86881 113.77 9.89548C114.099 9.93105 114.375 9.67319 114.375 9.35309V8.03714C114.375 7.37916 114.856 6.8101 115.514 6.74786C116.262 6.67673 116.894 7.26357 116.894 8.00157V10.2156C116.894 10.3045 116.965 10.3845 117.063 10.3845H117.828C117.917 10.3845 117.997 10.3134 117.997 10.2156V8.06381C117.997 6.77453 116.983 5.68087 115.692 5.65419L115.683 5.63641Z" fill="white"/>
+<path d="M119.661 5.63672C119.359 5.63672 119.109 5.88568 119.109 6.188V9.82465C119.109 10.127 119.359 10.3759 119.661 10.3759C119.964 10.3759 120.213 10.127 120.213 9.82465V6.188C120.213 5.88568 119.964 5.63672 119.661 5.63672Z" fill="white"/>
+<path d="M108.866 5.63672H108.119C108.048 5.63672 107.985 5.68118 107.959 5.75231L106.704 8.76656L105.449 5.75231C105.422 5.68118 105.36 5.63672 105.289 5.63672H104.541C104.417 5.63672 104.328 5.77898 104.381 5.90347L106.054 9.91357C106.17 10.1892 106.428 10.367 106.713 10.367C106.997 10.367 107.256 10.1892 107.371 9.91357L109.044 5.90347C109.098 5.77898 109.009 5.63672 108.884 5.63672H108.866Z" fill="white"/>
+<path d="M103.367 5.63682H102.628C102.53 5.63682 102.45 5.71685 102.45 5.81465V7.9842C102.45 8.71331 101.818 9.30905 101.071 9.23791C100.421 9.17567 99.9314 8.60661 99.9314 7.94863V5.79687C99.9314 5.70795 99.8602 5.62793 99.7623 5.62793H98.997C98.908 5.62793 98.8279 5.69906 98.8279 5.79687V7.92196C98.8279 9.19345 99.8157 10.2871 101.097 10.3316C102.441 10.3849 103.545 9.30905 103.545 7.97531V5.80576C103.545 5.70795 103.464 5.62793 103.367 5.62793V5.63682Z" fill="white"/>
+</g>
+<defs>
+<clipPath id="clip0_2525_20354">
+<rect width="128" height="88" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+    </div>
+    <p class="empty-title">No stop added</p>
+    <p class="empty-subtitle">Add your first stop to begin the fantastic journey</p>
+    <button class="btn-add-first-stop" onclick="window.location.href='add-stop.html'">Add first stop</button>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator">
+    <div class="home-indicator-bar"></div>
+  </div>
+
+  <!-- Delete confirmation sheet -->
+  <div class="delete-overlay" id="delete-overlay">
+    <div class="delete-sheet">
+      <div class="delete-sheet-header">
+        <p class="delete-title" id="delete-title">Remove this stop?</p>
+        <p class="delete-subtitle" id="delete-subtitle">This stop will be removed from your planner</p>
+      </div>
+      <div class="delete-preview-area" id="delete-preview-area"></div>
+      <div class="delete-buttons">
+        <button class="btn-confirm-remove" id="btn-confirm-remove">Remove stop</button>
+        <button class="btn-cancel-remove" id="btn-cancel-remove">Keep in planner</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const list = document.getElementById('planner-list');
+  let editMode = false;
+  let allSelected = false;
+  let pendingDeleteCards = [];
+
+  // ── Move all .visited cards to the bottom ──
+  function enforceVisitedAtBottom() {
+    const visited = [...list.querySelectorAll('.place-card.visited')];
+    visited.forEach(card => list.appendChild(card));
+  }
+
+  // ── Mark as visited ──
+  function markVisited(card) {
+    card.classList.remove('expanded');
+    card.classList.add('visited');
+    enforceVisitedAtBottom();
+  }
+
+  // ── Add checkbox to name-row (right side) ──
+  function addEditControls(card) {
+    const nameRow = card.querySelector('.name-row');
+    if (!nameRow || nameRow.querySelector('.card-checkbox')) return;
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'card-checkbox';
+    nameRow.appendChild(checkbox);
+  }
+
+
+  // ── Edit mode toggle ──
+  function toggleEditMode() {
+    editMode = !editMode;
+    document.body.classList.toggle('edit-mode', editMode);
+    if (!editMode) {
+      // Reset state on exit
+      document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = false);
+      allSelected = false;
+      document.getElementById('btn-select-all').classList.remove('all-selected');
+      updateDeleteBtn();
+      document.querySelectorAll('.place-card.expanded').forEach(c => c.classList.remove('expanded'));
+    }
+  }
+
+  // ── Toggle select all ──
+  function toggleSelectAll() {
+    allSelected = !allSelected;
+    document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = allSelected);
+    document.getElementById('btn-select-all').classList.toggle('all-selected', allSelected);
+    updateDeleteBtn();
+  }
+
+  // ── Auto-arrange: sort cards by distance (nearest first) ──
+  function parseDist(text) {
+    const t = (text || '').trim().toLowerCase();
+    const num = parseFloat(t);
+    if (isNaN(num)) return Infinity;
+    return t.includes('km') ? num * 1000 : num; // normalise to metres
+  }
+
+  document.getElementById('btn-auto-arrange').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-auto-arrange');
+    if (btn.classList.contains('disabled') || btn.classList.contains('arranging')) return;
+
+    btn.classList.add('arranging');
+
+    // Small delay so spinner renders before heavy DOM work
+    await new Promise(r => setTimeout(r, 400));
+
+    const cards = [...list.querySelectorAll('.place-card:not(.visited)')];
+    const visitedCards = [...list.querySelectorAll('.place-card.visited')];
+
+    cards.sort((a, b) => {
+      const da = parseDist(a.querySelector('.distance')?.textContent);
+      const db = parseDist(b.querySelector('.distance')?.textContent);
+      return da - db;
+    });
+
+    // Re-append in sorted order (visited always stay at bottom)
+    cards.forEach(card => list.appendChild(card));
+    visitedCards.forEach(card => list.appendChild(card));
+
+    await savePlannerOrder();
+    btn.classList.remove('arranging');
+  });
+
+  // ── Update delete button state ──
+  function updateDeleteBtn() {
+    const anyChecked = [...document.querySelectorAll('.card-checkbox')].some(cb => cb.checked);
+    document.getElementById('btn-delete-toolbar').classList.toggle('active', anyChecked);
+    // Sync select-all visual state
+    const all = [...document.querySelectorAll('.card-checkbox')];
+    const isAllChecked = all.length > 0 && all.every(c => c.checked);
+    allSelected = isAllChecked;
+    document.getElementById('btn-select-all').classList.toggle('all-selected', isAllChecked);
+  }
+
+  // ── Delete confirmation ──
+  function makePreviewCardHTML(card) {
+    const img  = card.querySelector('.thumbnail')?.src || '';
+    const name = card.querySelector('.place-name')?.textContent || '';
+    const dist = card.querySelector('.distance')?.textContent || '';
+    const tag  = card.querySelector('.category-badge')?.textContent || '';
+    return `<div class="delete-preview-card">
+      <img class="delete-preview-thumb" src="${img}" alt="${name}">
+      <div class="delete-preview-info">
+        <span class="delete-preview-name">${name}</span>
+        <div class="delete-preview-meta">
+          <span class="delete-preview-dist">${dist}</span>
+          <span class="delete-preview-tag">${tag}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const CHEVRON_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M6 9l6 6 6-6" stroke="#0D57E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+  function showDeleteConfirm(cards) {
+    pendingDeleteCards = cards;
+    const title      = document.getElementById('delete-title');
+    const subtitle   = document.getElementById('delete-subtitle');
+    const area       = document.getElementById('delete-preview-area');
+    const confirmBtn = document.getElementById('btn-confirm-remove');
+
+    title.textContent    = 'Remove this stop?';
+    subtitle.textContent = 'This stop will be removed from your planner';
+
+    if (cards.length === 1) {
+      confirmBtn.textContent = 'Remove stop';
+      area.innerHTML = makePreviewCardHTML(cards[0]);
+    } else {
+      confirmBtn.textContent = `Remove ${cards.length} stops`;
+      const cardsHTML = cards.map(makePreviewCardHTML).join('');
+      area.innerHTML = `
+        <p class="delete-count-label">${cards.length} stops selected</p>
+        <div class="delete-preview-list" id="delete-preview-list">${cardsHTML}</div>
+        <div class="see-more-gradient"></div>
+        <button class="btn-see-more" id="btn-see-more" onclick="toggleSeeMore()">
+          See more ${CHEVRON_SVG}
+        </button>`;
+    }
+
+    document.getElementById('delete-overlay').classList.add('visible');
+  }
+
+  function toggleSeeMore() {
+    const listEl = document.getElementById('delete-preview-list');
+    const btnEl  = document.getElementById('btn-see-more');
+    if (!listEl || !btnEl) return;
+    const expanded = listEl.classList.toggle('expanded');
+    btnEl.classList.toggle('expanded', expanded);
+    btnEl.innerHTML = expanded
+      ? `See less ${CHEVRON_SVG}`
+      : `See more ${CHEVRON_SVG}`;
+  }
+
+  function hideDeleteConfirm() {
+    document.getElementById('delete-overlay').classList.remove('visible');
+    // Reset expanded state so next open starts collapsed
+    const listEl = document.getElementById('delete-preview-list');
+    if (listEl) listEl.classList.remove('expanded');
+    pendingDeleteCards = [];
+  }
+
+  document.getElementById('btn-cancel-remove').addEventListener('click', hideDeleteConfirm);
+  document.getElementById('delete-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('delete-overlay')) hideDeleteConfirm();
+  });
+
+  document.getElementById('btn-confirm-remove').addEventListener('click', async () => {
+    pendingDeleteCards.forEach(card => card.remove());
+    hideDeleteConfirm();
+    allSelected = false;
+    document.getElementById('btn-select-all').classList.remove('all-selected');
+    updateDeleteBtn();
+    if (editMode) toggleEditMode();
+    if (list.querySelectorAll('.place-card').length === 0) setEmptyState(true);
+    await savePlannerOrder();
+  });
+
+  // ── Bulk delete (opens confirmation) ──
+  document.getElementById('btn-delete-toolbar').addEventListener('click', () => {
+    const toDelete = [...document.querySelectorAll('.place-card')].filter(
+      card => card.querySelector('.card-checkbox')?.checked
+    );
+    if (toDelete.length > 0) showDeleteConfirm(toDelete);
+  });
+
+  // ── Save current order to planner.json ──
+  async function savePlannerOrder() {
+    try {
+      const [plannerRes, stopsRes] = await Promise.all([
+        fetch('http://localhost:3000/api/planner'),
+        fetch('http://localhost:3000/api/stops')
+      ]);
+      const data  = await plannerRes.json();
+      const stops = await stopsRes.json();
+
+      const orderedIds = [...list.querySelectorAll('[data-place-id]')].map(el => el.dataset.placeId);
+      const placeMap = Object.fromEntries((data.selectedPlaces || []).map(p => [p.id, p]));
+      const ordered = orderedIds.map(id => placeMap[id]).filter(Boolean);
+      const remainingIds = new Set(ordered.map(p => p.id));
+
+      // Reconcile addedPacks: remove packs whose stops are all gone
+      const packs = stops.packs || {};
+      const addedPacks = { ...(data.addedPacks || {}) };
+      for (const packId of Object.keys(addedPacks)) {
+        const packStopIds = (packs[packId]?.stops || []).map(s => s.id);
+        const stillIn = packStopIds.filter(id => remainingIds.has(id)).length;
+        if (stillIn === 0) delete addedPacks[packId];
+        else addedPacks[packId] = stillIn;
+      }
+
+      await fetch('http://localhost:3000/api/planner', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, selectedPlaces: ordered, addedPacks })
+      });
+    } catch (err) {
+      console.error('Failed to save planner:', err);
+    }
+  }
+
+  // ── Card list click handler ──
+  list.addEventListener('click', (e) => {
+    // In edit mode: tapping card (not drag-handle or checkbox) toggles checkbox
+    if (editMode) {
+      if (e.target.closest('.drag-handle')) return;
+      const card = e.target.closest('.place-card');
+      if (!card) return;
+      const cb = card.querySelector('.card-checkbox');
+      if (cb && !e.target.matches('.card-checkbox')) {
+        cb.checked = !cb.checked;
+      }
+      updateDeleteBtn();
+      return;
+    }
+
+    // Normal mode: tray icon clicks (check = visited, trash = delete confirm)
+    const trayGroup = e.target.closest('.tray-icon-group');
+    if (trayGroup) {
+      const card = trayGroup.closest('.place-card');
+      const svgs = [...trayGroup.querySelectorAll('svg')];
+      const clicked = e.target.closest('svg');
+      const idx = svgs.indexOf(clicked);
+      if (idx === 0 && card) markVisited(card);
+      if (idx === 1 && card) showDeleteConfirm([card]);
+      return;
+    }
+
+    // Ignore drag-handle and tray area
+    if (e.target.closest('.drag-handle') || e.target.closest('.card-tray')) return;
+
+    const card = e.target.closest('.place-card');
+    if (!card) return;
+    const isExpanded = card.classList.contains('expanded');
+    document.querySelectorAll('.place-card.expanded').forEach(c => c.classList.remove('expanded'));
+    if (!isExpanded) card.classList.add('expanded');
+  });
+
+  // ── Inject places from planner.json ──
+  function makePlaceCard(place) {
+    const badgeClass = place.tagType === 'green' ? 'badge-landmark' : 'badge-temple';
+    const li = document.createElement('li');
+    li.className = 'place-card';
+    li.dataset.placeId = place.id;
+    li.innerHTML = `
+      <div class="card-row">
+        <div class="drag-handle" title="Drag to reorder"><span></span><span></span><span></span></div>
+        <img class="thumbnail" src="${place.imgSrc}" alt="${place.name}" />
+        <div class="card-info">
+          <div class="name-row">
+            <span class="place-name">${place.name}</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="meta-row">
+            <span class="distance">${place.dist}</span>
+            <span class="badge ${badgeClass} category-badge">${place.tag}</span>
+            <div class="badge-visited visited-badge">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>Visited
+            </div>
+            <div class="hours-row">
+              <span class="open-label">Open</span>
+              <span class="hours-label">&nbsp;8:00 - 18:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-tray"><div class="card-tray-inner"><div class="card-tray-content">
+        <div class="tray-actions">
+          <button class="btn-ride">Request a ride</button>
+          <button class="btn-more">More info</button>
+        </div>
+        <div class="tray-icon-group">
+          <svg class="tray-icon" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#0D57E2" stroke-width="1.5"/>
+            <path d="M8 12l3 3 5-5" stroke="#0D57E2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg class="tray-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#E05252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 11v5M14 11v5" stroke="#E05252" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div></div></div>
+    `;
+    addEditControls(li);
+    return li;
+  }
+
+  function setEmptyState(isEmpty) {
+    document.getElementById('empty-state').classList.toggle('visible', isEmpty);
+    list.style.display = isEmpty ? 'none' : '';
+    document.getElementById('btn-auto-arrange').classList.toggle('disabled', isEmpty);
+  }
+
+  (async function injectSelectedPlaces() {
+    let selected = [];
+    try {
+      const res = await fetch('http://localhost:3000/api/planner');
+      const data = await res.json();
+      selected = data.selectedPlaces || [];
+    } catch { selected = []; }
+
+    // Count all cards (static + dynamic)
+    const totalStatic = list.querySelectorAll('.place-card').length;
+
+    if (selected.length === 0 && totalStatic === 0) {
+      setEmptyState(true);
+      return;
+    }
+
+    setEmptyState(false);
+
+    const existingIds = new Set(
+      [...list.querySelectorAll('[data-place-id]')].map(el => el.dataset.placeId)
+    );
+
+    selected.forEach(place => {
+      if (existingIds.has(place.id)) return;
+      const li = makePlaceCard(place);
+      const firstVisited = list.querySelector('.place-card.visited');
+      if (firstVisited) list.insertBefore(li, firstVisited);
+      else list.appendChild(li);
+      existingIds.add(place.id);
+    });
+  })();
+
+  // ── Drag-to-reorder via SortableJS ──
+  Sortable.create(list, {
+    handle: '.drag-handle',
+    animation: 180,
+    easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    filter: '.visited',           // visited cards cannot be dragged
+    delay: 80,
+    delayOnTouchOnly: false,
+    onStart() {
+      document.querySelectorAll('.place-card.expanded').forEach(c => c.classList.remove('expanded'));
+    },
+    onEnd() {
+      // Safety: if a non-visited card was somehow dropped below a visited one, re-sort
+      enforceVisitedAtBottom();
+    },
+  });
+
+  // ── Action bar: mouse drag-to-scroll ──
+  const actionBar = document.querySelector('.action-bar');
+  let isDown = false, startX, scrollLeft;
+
+  actionBar.addEventListener('mousedown', (e) => {
+    isDown = true;
+    startX = e.pageX - actionBar.offsetLeft;
+    scrollLeft = actionBar.scrollLeft;
+    actionBar.classList.add('dragging');
+  });
+  actionBar.addEventListener('mouseleave', () => { isDown = false; actionBar.classList.remove('dragging'); });
+  actionBar.addEventListener('mouseup',    () => { isDown = false; actionBar.classList.remove('dragging'); });
+  actionBar.addEventListener('mousemove',  (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    actionBar.scrollLeft = scrollLeft - (e.pageX - actionBar.offsetLeft - startX);
+  });
+</script>
+
+</body>
+</html>

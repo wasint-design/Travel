@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map — muvmi Tourist</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone Frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      height: 44px;
+      background: #fff;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 6px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #4F4F4F; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Nav Bar ── */
+    .nav-bar {
+      height: 56px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 1px 0 #EEEEEE;
+    }
+    .btn-back {
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; padding: 4px; color: #4F4F4F;
+    }
+    .nav-title {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-size: 20px; font-weight: 600; color: #4F4F4F; white-space: nowrap;
+    }
+    .nav-count {
+      font-size: 13px;
+      font-weight: 500;
+      color: #909090;
+      letter-spacing: 0.2px;
+    }
+
+    /* ── Map ── */
+    #map {
+      flex: 1;
+      min-height: 0;
+      z-index: 1;
+    }
+
+    /* Custom Leaflet popup */
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 0;
+    }
+    .leaflet-popup-content {
+      margin: 10px 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+    }
+    .popup-name {
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 18px;
+    }
+    .popup-meta {
+      font-size: 11px;
+      color: #909090;
+      margin-top: 2px;
+    }
+    .leaflet-popup-tip { background: #fff; }
+
+    /* ── Bottom strip ── */
+    .map-strip {
+      flex-shrink: 0;
+      background: #fff;
+      box-shadow: 0 -1px 0 #EEEEEE;
+      padding: 12px 0 8px;
+    }
+    .strip-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #BBBBBB;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 0 16px 8px;
+    }
+    .strip-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 2px 16px 4px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .strip-scroll::-webkit-scrollbar { display: none; }
+
+    .strip-card {
+      flex-shrink: 0;
+      width: 148px;
+      background: #F8FAFF;
+      border: 1.5px solid #E7EEFC;
+      border-radius: 12px;
+      padding: 10px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .strip-card:hover { background: #EEF3FF; border-color: #0D57E2; }
+    .strip-card.active {
+      background: #E7EEFC;
+      border-color: #0D57E2;
+      box-shadow: 0 2px 8px rgba(13,87,226,0.15);
+    }
+    .strip-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .strip-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #0D57E2;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .strip-card.active .strip-num { background: #0a49c4; }
+    .strip-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4F4F4F;
+      line-height: 16px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      flex: 1;
+    }
+    .strip-meta {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .strip-dist {
+      font-size: 11px;
+      color: #909090;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .strip-tag {
+      font-size: 10px;
+      background: #E7EEFC;
+      color: #4F4F4F;
+      border-radius: 6px;
+      padding: 1px 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 72px;
+    }
+
+    /* Empty state */
+    .map-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #909090;
+    }
+    .map-empty p { font-size: 14px; font-weight: 500; }
+    .map-empty span { font-size: 12px; color: #BBBBBB; }
+
+    /* ── Home Indicator ── */
+    .home-indicator {
+      height: 34px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-indicator-bar {
+      width: 130px; height: 5px;
+      background: #1a1a1a;
+      border-radius: 100px;
+    }
+
+    /* Leaflet zoom control */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+      border-radius: 8px !important;
+      overflow: hidden;
+    }
+    .leaflet-control-zoom a {
+      color: #4F4F4F !important;
+      font-size: 16px !important;
+      line-height: 28px !important;
+      width: 28px !important;
+      height: 28px !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">5:13</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="7" width="3" height="5" rx="1" fill="#4F4F4F"/>
+        <rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="#4F4F4F"/>
+        <rect x="9" y="2" width="3" height="10" rx="1" fill="#4F4F4F"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#4F4F4F" opacity="0.3"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#4F4F4F"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#4F4F4F"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#4F4F4F"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#4F4F4F" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="15" height="8" rx="2" fill="#4F4F4F"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#4F4F4F" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nav Bar -->
+  <div class="nav-bar">
+    <button class="btn-back" onclick="window.location.href='planner.html'">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="#4F4F4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span class="nav-title">Map</span>
+    <span class="nav-count" id="nav-count"></span>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Bottom Card Strip -->
+  <div class="map-strip" id="map-strip">
+    <p class="strip-label">Your stops</p>
+    <div class="strip-scroll" id="strip-scroll"></div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator">
+    <div class="home-indicator-bar"></div>
+  </div>
+
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:3000';
+  let map, activeMarker = null;
+
+  function makeMarkerIcon(n, isActive) {
+    const bg = isActive ? '#0a49c4' : '#0D57E2';
+    const size = isActive ? 36 : 32;
+    const border = isActive ? '3px' : '2.5px';
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        width:${size}px;height:${size}px;border-radius:50%;
+        background:${bg};color:#fff;
+        font-size:13px;font-weight:700;
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 2px 10px rgba(13,87,226,0.4);
+        border:${border} solid #fff;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        transition:all .2s;
+      ">${n}</div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+      popupAnchor: [0, -(size / 2) - 4],
+    });
+  }
+
+  async function init() {
+    map = L.map('map', {
+      zoomControl: false,
+      attributionControl: false,
+    }).setView([13.7563, 100.5018], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    const [plannerData, stopsData] = await Promise.all([
+      fetch(`${API_BASE}/api/planner`).then(r => r.json()),
+      fetch(`${API_BASE}/api/stops`).then(r => r.json()),
+    ]);
+
+    const selected = plannerData.selectedPlaces || [];
+
+    // Build id → coords from stops.json
+    const coordsMap = {};
+    (stopsData.attractions || []).forEach(a => {
+      if (a.lat != null) coordsMap[a.id] = [a.lat, a.lng];
+    });
+    Object.values(stopsData.packs || {}).forEach(pack => {
+      (pack.stops || []).forEach(s => {
+        if (s.lat != null) coordsMap[s.id] = [s.lat, s.lng];
+      });
+    });
+
+    // Empty state
+    if (selected.length === 0) {
+      document.getElementById('map-strip').innerHTML = `
+        <div class="map-empty">
+          <p>No stops added yet</p>
+          <span>Go back and add stops to your planner</span>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('nav-count').textContent = `${selected.length} stops`;
+
+    const strip = document.getElementById('strip-scroll');
+    const bounds = [];
+    const markerRefs = [];
+    const cardRefs = [];
+
+    selected.forEach((place, i) => {
+      const coords = coordsMap[place.id];
+      const n = i + 1;
+
+      // ── Strip card ──
+      const card = document.createElement('div');
+      card.className = 'strip-card';
+      card.innerHTML = `
+        <div class="strip-card-top">
+          <div class="strip-num">${n}</div>
+          <span class="strip-name">${place.name}</span>
+        </div>
+        <div class="strip-meta">
+          <span class="strip-dist">${place.dist}</span>
+          <span class="strip-tag">${place.tag}</span>
+        </div>`;
+      strip.appendChild(card);
+      cardRefs.push(card);
+
+      if (!coords) return;
+
+      // ── Map marker ──
+      const marker = L.marker(coords, { icon: makeMarkerIcon(n, false) }).addTo(map);
+      marker.bindPopup(`
+        <div class="popup-name">${place.name}</div>
+        <div class="popup-meta">${place.dist} · ${place.tag}</div>
+      `, { closeButton: false, maxWidth: 180 });
+      markerRefs.push({ marker, index: i, coords });
+      bounds.push(coords);
+
+      function setActive(idx) {
+        // Reset all
+        markerRefs.forEach(({ marker: m, index: mi }) => {
+          m.setIcon(makeMarkerIcon(mi + 1, false));
+        });
+        cardRefs.forEach(c => c.classList.remove('active'));
+        // Activate selected
+        marker.setIcon(makeMarkerIcon(n, true));
+        card.classList.add('active');
+        card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+
+      // Card tap → fly to marker + open popup
+      card.addEventListener('click', () => {
+        setActive(i);
+        map.flyTo(coords, 15, { duration: 0.6 });
+        marker.openPopup();
+      });
+
+      // Marker tap → highlight card
+      marker.on('click', () => {
+        setActive(i);
+      });
+    });
+
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [48, 48] });
+    }
+  }
+
+  init();
+</script>
+
+</body>
+</html>
