@@ -1,0 +1,25 @@
+/* ── Mobile: strip phone frame, go full-screen ── */
+@media (max-width: 480px) {
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 100dvh !important;
+  }
+
+  .phone {
+    width: 100vw !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    /* Safe area for notch / Dynamic Island / home bar */
+    padding-top: env(safe-area-inset-top) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+
+  /* Hide simulated chrome — real phone has its own */
+  .phone::before       { display: none !important; }  /* notch */
+  .status-bar          { display: none !important; }  /* fake status bar */
+  .home-indicator      { display: none !important; }  /* fake home bar */
+}
