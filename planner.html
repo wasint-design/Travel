@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Tourist Planner" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/images/icon-192.png" />
-  <link rel="stylesheet" href="/mobile.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="images/icon-192.png" />
+  <link rel="stylesheet" href="mobile.css" />
   <title>Planner — muvmi Tourist</title>
   <!-- SortableJS for smooth drag-to-reorder -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -1129,6 +1129,7 @@
 
 </div>
 
+<script src="api.js"></script>
 <script>
   const list = document.getElementById('planner-list');
   let editMode = false;
@@ -1518,6 +1519,6 @@
     actionBar.scrollLeft = scrollLeft - (e.pageX - actionBar.offsetLeft - startX);
   });
 </script>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js');</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 </html>

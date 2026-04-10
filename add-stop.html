@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Tourist Planner" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/images/icon-192.png" />
-  <link rel="stylesheet" href="/mobile.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="images/icon-192.png" />
+  <link rel="stylesheet" href="mobile.css" />
   <title>Add a Stop — muvmi Tourist</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -686,6 +686,7 @@
 
 </div>
 
+<script src="api.js"></script>
 <script>
   // ── Tab switching ──
   const tabs = document.querySelectorAll('.tab');
@@ -1083,6 +1084,6 @@
     cats.scrollLeft = catScrollLeft - (e.pageX - cats.offsetLeft - catStartX);
   });
 </script>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js');</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
 </body>
 </html>
