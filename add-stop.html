@@ -14,6 +14,7 @@
   <title>Add a Stop — muvmi Tourist</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
 
     body {
       background: #F0F2F5;
@@ -95,6 +96,7 @@
     /* ── Body scroll area ── */
     .body {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       scrollbar-width: none;
     }
@@ -1067,22 +1069,84 @@
   document.getElementById('btn-back').addEventListener('click', goBack);
   document.getElementById('btn-done').addEventListener('click', goBack);
 
-  // ── Category chips: mouse drag-to-scroll ──
-  const cats = document.getElementById('categories');
-  let catDown = false, catStartX, catScrollLeft;
-  cats.addEventListener('mousedown', e => {
-    catDown = true;
-    catStartX = e.pageX - cats.offsetLeft;
-    catScrollLeft = cats.scrollLeft;
-    cats.classList.add('dragging');
-  });
-  cats.addEventListener('mouseleave', () => { catDown = false; cats.classList.remove('dragging'); });
-  cats.addEventListener('mouseup',    () => { catDown = false; cats.classList.remove('dragging'); });
-  cats.addEventListener('mousemove',  e => {
-    if (!catDown) return;
-    e.preventDefault();
-    cats.scrollLeft = catScrollLeft - (e.pageX - cats.offsetLeft - catStartX);
-  });
+  // ── Draggable scroll with momentum + axis-locking ──
+  function makeDraggable(el, { vertical = false } = {}) {
+    let isDown = false, axis = null, startX, startY, scrollLeft, scrollTop;
+    let velX = 0, velY = 0, lastX = 0, lastY = 0, lastT = 0, rafId = null;
+    const AXIS_THRESHOLD = 5;
+
+    el.style.cursor = 'grab';
+    el.style.userSelect = 'none';
+
+    function cancelMomentum() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    }
+
+    function applyMomentum() {
+      if (axis === 'x') {
+        velX *= 0.92;
+        el.scrollLeft += velX;
+        if (Math.abs(velX) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; }
+      } else if (axis === 'y') {
+        velY *= 0.92;
+        el.scrollTop += velY;
+        if (Math.abs(velY) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; }
+      }
+      rafId = null;
+    }
+
+    el.addEventListener('mousedown', e => {
+      if (e.target.closest('button, a, input, [role="button"]')) return;
+      cancelMomentum();
+      isDown = true;
+      axis = null;
+      el.style.cursor = 'grabbing';
+      startX = e.pageX; startY = e.pageY;
+      scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+      lastX = e.pageX; lastY = e.pageY;
+      lastT = performance.now();
+      velX = 0; velY = 0;
+    });
+
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      const dx = e.pageX - startX;
+      const dy = e.pageY - startY;
+
+      if (!axis) {
+        if (Math.abs(dx) > AXIS_THRESHOLD || Math.abs(dy) > AXIS_THRESHOLD) {
+          axis = (!vertical || Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+        } else return;
+      }
+
+      e.preventDefault();
+      const now = performance.now();
+      const dt  = now - lastT || 1;
+
+      if (axis === 'x') {
+        velX = (lastX - e.pageX) / dt * 12;
+        el.scrollLeft = scrollLeft - dx;
+      } else {
+        velY = (lastY - e.pageY) / dt * 12;
+        el.scrollTop = scrollTop - dy;
+      }
+      lastX = e.pageX; lastY = e.pageY;
+      lastT = now;
+    });
+
+    const release = () => {
+      if (!isDown) return;
+      isDown = false;
+      el.style.cursor = 'grab';
+      rafId = requestAnimationFrame(applyMomentum);
+    };
+
+    el.addEventListener('mouseup',    release);
+    el.addEventListener('mouseleave', release);
+  }
+
+  makeDraggable(document.querySelector('.body'), { vertical: true });
+  makeDraggable(document.getElementById('categories'));
 </script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
 </body>
