@@ -14,6 +14,7 @@
   <title>Home — muvmi Tourist</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
 
     body {
       background: #F0F2F5;
@@ -28,7 +29,7 @@
     /* ── Phone Frame ── */
     .phone {
       width: 393px;
-      min-height: 852px;
+      height: 852px;
       background: #fff;
       border-radius: 48px;
       box-shadow:
@@ -64,11 +65,11 @@
 
     /* Status Bar */
     .status-bar {
-      height: 44px;
+      height: 50px;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       justify-content: space-between;
-      padding: 0 20px 6px;
+      padding: 0 20px;
       position: relative;
       z-index: 10;
     }
@@ -86,7 +87,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 16px;
-      margin-top: 11px;
+      margin-top: 5px;
     }
     .bkk-pass {
       background: #0A46B5;
@@ -204,12 +205,9 @@
       flex: 1;
       overflow-y: auto;
       min-height: 0;
-      padding-top: 56px; /* 401 - 345 = 56px gap to clear overflowing map card */
       padding-bottom: 16px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
-      position: relative;
-      z-index: 1;
     }
     .scroll-content::-webkit-scrollbar { display: none; }
 
@@ -217,7 +215,7 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
-      padding: 0 16px;
+      padding: 56px 16px 0; /* 56px top clears overflowing map card */
     }
 
     /* ── Section title ── */
@@ -233,9 +231,12 @@
     /* ── Categories ── */
     .categories-row {
       display: flex;
-      gap: 0;
-      justify-content: space-between;
+      gap: 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
+    .categories-row::-webkit-scrollbar { display: none; }
     .category-item {
       display: flex;
       flex-direction: column;
@@ -277,11 +278,9 @@
       gap: 8px;
       overflow-x: auto;
       scrollbar-width: none;
-      scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
-      /* bleed past right content padding so next card peeks */
-      margin-right: -16px;
-      scroll-behavior: smooth;
+      margin: 0 -16px;
+      padding: 0 16px;
     }
     .banner-scroll::-webkit-scrollbar { display: none; }
 
@@ -291,7 +290,6 @@
       border-radius: 16px;
       overflow: hidden;
       position: relative;
-      scroll-snap-align: start;
       background: #E7EEFC;
     }
     .banner-card > img {
@@ -427,7 +425,7 @@
     .pack-scroll {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 10px;
       overflow-x: auto;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
@@ -439,7 +437,7 @@
     /* Same card design as add-stop.html trip-card */
     .trip-card-h {
       flex-shrink: 0;
-      width: 280px;
+      width: 308px;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 0 4px rgba(0,0,0,0.15);
@@ -462,13 +460,13 @@
       object-fit: cover;
     }
     .trip-card-h .card-body {
-      padding: 12px 12px 0;
+      padding: 16px 16px 0;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
     .trip-card-h .card-title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: #0D57E2;
       letter-spacing: 0.25px;
@@ -478,11 +476,11 @@
       text-overflow: ellipsis;
     }
     .trip-card-h .card-desc {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 500;
       color: #4F4F4F;
       letter-spacing: 0.25px;
-      line-height: 18px;
+      line-height: 22px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
@@ -528,13 +526,13 @@
     }
     .trip-card-h .see-all-line { flex: 1; height: 1px; background: #E7EEFC; }
     .trip-card-h .see-all-text {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       color: #0D57E2;
       white-space: nowrap;
       letter-spacing: 0.25px;
     }
-    .trip-card-h .card-footer { padding: 0 12px 12px; }
+    .trip-card-h .card-footer { padding: 0 16px 16px; }
     .trip-card-h .btn-add-all {
       width: 100%;
       background: #0D57E2;
@@ -774,6 +772,9 @@
 
 <div class="phone">
 
+  <!-- ── Scrollable Content (header + sections scroll together) ── -->
+  <div class="scroll-content">
+
   <!-- ── Blue Header ── -->
   <div class="home-header">
 
@@ -808,10 +809,7 @@
       </div>
       <button class="btn-exit">
         Exit
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M10.5 2.5H13C13.3 2.5 13.5 2.7 13.5 3V13C13.5 13.3 13.3 13.5 13 13.5H10.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M6.5 11L10 8M10 8L6.5 5M10 8H2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <img src="images/figma/icon-exit.svg" width="16" height="16" alt="" />
       </button>
     </div>
 
@@ -820,14 +818,10 @@
 
     <!-- Map Preview Card -->
     <div class="map-preview-card" onclick="window.location.href='map.html'">
-      <img src="https://www.figma.com/api/mcp/asset/5319ce06-197b-44de-a807-a789dc19df6f" alt="Map preview" />
+      <img src="images/figma/map-preview.png" alt="Map preview" />
       <!-- Search Bar -->
       <div class="map-search-bar">
-        <svg class="map-search-pin" viewBox="0 0 20 20" fill="none">
-          <path fill-rule="evenodd" clip-rule="evenodd"
-            d="M10 1.5C7.0 1.5 4.5 4.0 4.5 7.0C4.5 11.0 10 18.5 10 18.5C10 18.5 15.5 11.0 15.5 7.0C15.5 4.0 13.0 1.5 10 1.5ZM10 9C8.9 9 8 8.1 8 7C8 5.9 8.9 5 10 5C11.1 5 12 5.9 12 7C12 8.1 11.1 9 10 9Z"
-            fill="#0D57E2"/>
-        </svg>
+        <img src="images/figma/icon-map-pin.svg" class="map-search-pin" alt="" />
         <span class="map-search-text">Where to go today?</span>
       </div>
       <!-- Car label -->
@@ -836,8 +830,6 @@
 
   </div><!-- /home-header -->
 
-  <!-- ── Scrollable Content ── -->
-  <div class="scroll-content">
     <div class="content-inner">
 
       <!-- Categories -->
@@ -855,31 +847,31 @@
         </div>
         <div class="category-item">
           <div class="category-icon-box cat-sight">
-            <img src="https://www.figma.com/api/mcp/asset/5ab92571-1d37-4e7f-9839-bc1ddc8ddab0" width="32" height="32" alt="" />
+            <img src="images/figma/cat-sightsee.svg" width="32" height="32" alt="" />
           </div>
           <span class="category-label" style="line-height:1.3">Sight<br>Seeing</span>
         </div>
         <div class="category-item">
           <div class="category-icon-box cat-restaurant">
-            <img src="https://www.figma.com/api/mcp/asset/6cff6e49-a5ee-422f-b012-c92b76026182" width="32" height="32" alt="" />
+            <img src="images/figma/cat-restaurant.svg" width="32" height="32" alt="" />
           </div>
           <span class="category-label">Restaurant</span>
         </div>
         <div class="category-item">
           <div class="category-icon-box cat-cafe">
-            <img src="https://www.figma.com/api/mcp/asset/d86f6a52-230a-4b60-9e47-84c463525a26" width="32" height="32" alt="" />
+            <img src="images/figma/cat-cafe.svg" width="32" height="32" alt="" />
           </div>
           <span class="category-label">Cafe</span>
         </div>
         <div class="category-item">
           <div class="category-icon-box cat-mall">
-            <img src="https://www.figma.com/api/mcp/asset/102c25e7-02d0-4068-89d2-b06cb1d94468" width="32" height="32" alt="" />
+            <img src="images/figma/cat-mall.svg" width="32" height="32" alt="" />
           </div>
           <span class="category-label">Mall</span>
         </div>
         <div class="category-item">
           <div class="category-icon-box cat-activity">
-            <img src="https://www.figma.com/api/mcp/asset/7a41b96d-78df-47cb-be09-9a89522818ac" width="32" height="32" alt="" />
+            <img src="images/figma/cat-activity.svg" width="32" height="32" alt="" />
           </div>
           <span class="category-label">Activity</span>
         </div>
@@ -889,7 +881,7 @@
       <div class="banner-scroll">
         <!-- Banner 1: Plan Your Trip -->
         <div class="banner-card">
-          <img src="https://www.figma.com/api/mcp/asset/c522d6f7-d2ab-45b3-bde0-7643a28b6c3e" alt="Plan Bangkok" />
+          <img src="images/figma/banner-plan.png" alt="Plan Bangkok" />
           <div style="position:absolute;top:15px;left:17px;right:17px;color:#fff;letter-spacing:0.25px">
             <p style="font-size:16px;font-weight:600;line-height:24px">Plan Bangkok Trip Your Way</p>
             <p style="font-size:14px;font-weight:500;line-height:22px;width:276px;margin-top:2px">Add places, sort your route, or pick a ready-made pack</p>
@@ -898,14 +890,14 @@
         </div>
         <!-- Banner 2: Grand Palace discount -->
         <div class="banner-card">
-          <img src="https://www.figma.com/api/mcp/asset/c538b416-9b08-488b-a377-9774d5075d5c" alt="Grand Palace" />
+          <img src="images/figma/banner-palace.png" alt="Grand Palace" />
           <div class="banner-overlay"></div>
           <p style="position:absolute;top:91px;left:14px;right:14px;font-size:14px;font-weight:600;color:#fff;line-height:22px;letter-spacing:0.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">50% discount Grand Palace tour ticket</p>
           <a class="banner-read-more">Read More &gt;&gt;</a>
         </div>
         <!-- Banner 3: Forest Walk -->
         <div class="banner-card">
-          <img src="https://www.figma.com/api/mcp/asset/63a7ad93-1b6c-4096-892b-a10562d7050a" alt="Forest Walk" />
+          <img src="images/figma/banner-forest.png" alt="Forest Walk" />
           <div class="banner-overlay"></div>
           <p style="position:absolute;top:91px;left:14px;right:14px;font-size:14px;font-weight:600;color:#fff;line-height:22px;letter-spacing:0.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Special Offer: Mystical Forest Walk - 40% Off</p>
           <a class="banner-read-more">Learn More &gt;&gt;</a>
@@ -918,9 +910,9 @@
         <div class="place-scroll">
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/6891986d-ac7d-4f1f-97c4-ea0241a1f301" alt="Wat Phra Kaew" />
+              <img src="images/figma/place-wat-phra-kaew.png" alt="Wat Phra Kaew" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -930,9 +922,9 @@
           </div>
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/376b80d8-d1e2-42d4-945b-f4bd58fc2339" alt="Wat Trimit" />
+              <img src="images/figma/place-wat-trimit.png" alt="Wat Trimit" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -942,9 +934,9 @@
           </div>
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/26d39744-2e36-408a-9c62-51a53a38040d" alt="Democracy Monument" />
+              <img src="images/figma/place-democracy.png" alt="Democracy Monument" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -969,9 +961,9 @@
         <div class="place-scroll">
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/53325981-3a8f-45a3-b6ee-c652c406a3e1" alt="Supanniga" />
+              <img src="images/figma/place-supanniga.png" alt="Supanniga Eating Room Tha Tien" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -981,9 +973,9 @@
           </div>
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/49ff9b8f-8ff9-4ef5-9c29-e1da70be8fd1" alt="Sri Trat" />
+              <img src="images/figma/place-sri-trat.png" alt="Sri Trat Restaurant &amp; Bar" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -993,9 +985,9 @@
           </div>
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/35bb7927-19c6-44b8-a7d3-e3696a1938c8" alt="Local Cuisine" />
+              <img src="images/figma/place-sri-trat-2.png" alt="The local by Oam Thong Thai Cuisine" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -1012,9 +1004,9 @@
         <div class="place-scroll">
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/eefe2bb5-f76f-497b-bd63-34abe967fab0" alt="Siam Paragon" />
+              <img src="images/figma/place-siam-paragon.png" alt="Siam Paragon" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -1024,9 +1016,9 @@
           </div>
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/ae07eaf4-da90-4cbb-addc-1d443a7dc770" alt="Iconsiam" />
+              <img src="images/figma/place-iconsiam.png" alt="Iconsiam" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -1036,9 +1028,9 @@
           </div>
           <div class="place-card">
             <div class="place-card-img-wrap">
-              <img src="https://www.figma.com/api/mcp/asset/b6d3d14d-5f06-4099-8640-929159843843" alt="Yaowarat" />
+              <img src="images/figma/place-yaowarat.png" alt="Yaowarat Road (Chinatown)" />
               <button class="bookmark-btn" aria-label="Bookmark">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 3H19C19.55 3 20 3.45 20 4V21L12 17.5L4 21V4C4 3.45 4.45 3 5 3Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <img src="images/figma/icon-bookmark.svg" width="24" height="24" alt="Bookmark" />
               </button>
             </div>
             <div class="place-card-body">
@@ -1050,39 +1042,39 @@
       </div>
 
     </div><!-- /content-inner -->
-  </div><!-- /scroll-content -->
+  </div><!-- /scroll-content (wraps header + content) -->
 
   <!-- ── Bottom Tab Bar ── -->
   <div class="tab-bar">
     <div class="tab-bar-inner">
       <div class="tab-item active">
         <div class="tab-icon">
-          <img src="https://www.figma.com/api/mcp/asset/2199026e-457f-48c7-b532-8dee4ec8f5c4" alt="Home" />
+          <img src="images/figma/tab-home.svg" width="20" height="20" alt="Home" />
         </div>
         <span class="tab-label" style="color:#0D57E2">Home</span>
       </div>
       <div class="tab-item">
         <div class="tab-icon">
-          <img src="https://www.figma.com/api/mcp/asset/e3d03d3a-374e-479f-a8ab-b10d09efa1fc" alt="Inbox" />
+          <img src="images/figma/tab-inbox.svg" width="20" height="20" alt="Inbox" />
         </div>
         <span class="tab-label">Inbox</span>
       </div>
       <a class="tab-item" href="planner.html">
         <div class="tab-badge" id="plan-badge"></div>
         <div class="tab-icon">
-          <img src="https://www.figma.com/api/mcp/asset/5083d6ab-6f8c-4e8a-920b-31a11a3055d8" alt="Plan" />
+          <img src="images/figma/tab-plan.svg" width="20" height="20" alt="Plan" />
         </div>
         <span class="tab-label">Plan</span>
       </a>
       <div class="tab-item">
         <div class="tab-icon">
-          <img src="https://www.figma.com/api/mcp/asset/12cb2add-c5a5-48e5-88c6-a410c4df270b" alt="Activity" />
+          <img src="images/figma/tab-activity.svg" width="20" height="20" alt="Activity" />
         </div>
         <span class="tab-label">Activity</span>
       </div>
       <div class="tab-item">
         <div class="tab-icon">
-          <img src="https://www.figma.com/api/mcp/asset/6095baa6-0a37-4cb0-88da-7e061f87dbda" alt="More" />
+          <img src="images/figma/tab-more.svg" width="20" height="20" alt="More" />
         </div>
         <span class="tab-label">More</span>
       </div>
@@ -1382,10 +1374,11 @@
 
   loadPacks();
 
-  // ── Drag-to-scroll with momentum (reusable) ──
-  function makeDraggable(el, { snapWidth = 0 } = {}) {
-    let isDown = false, startX, scrollLeft;
-    let velX = 0, lastX = 0, lastT = 0, rafId = null;
+  // ── Drag-to-scroll with momentum + axis locking (reusable) ──
+  function makeDraggable(el, { vertical = false } = {}) {
+    let isDown = false, axis = null, startX, startY, scrollLeft, scrollTop;
+    let velX = 0, velY = 0, lastX = 0, lastY = 0, lastT = 0, rafId = null;
+    const AXIS_THRESHOLD = 5;
 
     el.style.cursor = 'grab';
     el.style.userSelect = 'none';
@@ -1395,41 +1388,56 @@
     }
 
     function applyMomentum() {
-      velX *= 0.92;
-      el.scrollLeft += velX;
-      if (Math.abs(velX) > 0.5) {
-        rafId = requestAnimationFrame(applyMomentum);
-      } else {
-        if (snapWidth > 0) {
-          const target = Math.round(el.scrollLeft / snapWidth) * snapWidth;
-          el.scrollTo({ left: target, behavior: 'smooth' });
-        }
-        rafId = null;
+      if (axis === 'x') {
+        velX *= 0.92;
+        el.scrollLeft += velX;
+        if (Math.abs(velX) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; }
+      } else if (axis === 'y') {
+        velY *= 0.92;
+        el.scrollTop += velY;
+        if (Math.abs(velY) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; }
       }
+      rafId = null;
     }
 
     el.addEventListener('mousedown', e => {
       if (e.target.closest('button, a, input, [role="button"]')) return;
       cancelMomentum();
       isDown = true;
+      axis = null;
       el.style.cursor = 'grabbing';
-      startX     = e.pageX - el.offsetLeft;
-      scrollLeft = el.scrollLeft;
-      lastX = e.pageX;
+      startX = e.pageX; startY = e.pageY;
+      scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+      lastX = e.pageX; lastY = e.pageY;
       lastT = performance.now();
-      velX  = 0;
+      velX = 0; velY = 0;
     });
 
     el.addEventListener('mousemove', e => {
       if (!isDown) return;
+      const dx = e.pageX - startX;
+      const dy = e.pageY - startY;
+
+      // Lock axis once movement exceeds threshold
+      if (!axis) {
+        if (Math.abs(dx) > AXIS_THRESHOLD || Math.abs(dy) > AXIS_THRESHOLD) {
+          axis = (!vertical || Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+        } else return;
+      }
+
       e.preventDefault();
-      const x   = e.pageX - el.offsetLeft;
-      const now  = performance.now();
-      const dt   = now - lastT || 1;
-      velX  = (lastX - e.pageX) / dt * 12;
-      lastX = e.pageX;
+      const now = performance.now();
+      const dt  = now - lastT || 1;
+
+      if (axis === 'x') {
+        velX = (lastX - e.pageX) / dt * 12;
+        el.scrollLeft = scrollLeft - dx;
+      } else {
+        velY = (lastY - e.pageY) / dt * 12;
+        el.scrollTop = scrollTop - dy;
+      }
+      lastX = e.pageX; lastY = e.pageY;
       lastT = now;
-      el.scrollLeft = scrollLeft - (x - startX);
     });
 
     const release = () => {
@@ -1443,7 +1451,9 @@
     el.addEventListener('mouseleave', release);
   }
 
-  makeDraggable(document.querySelector('.banner-scroll'), { snapWidth: 361 + 8 });
+  makeDraggable(document.querySelector('.scroll-content'), { vertical: true });
+  makeDraggable(document.querySelector('.categories-row'));
+  makeDraggable(document.querySelector('.banner-scroll'));
   makeDraggable(document.querySelector('.pack-scroll'));
   document.querySelectorAll('.place-scroll').forEach(el => makeDraggable(el));
 </script>
