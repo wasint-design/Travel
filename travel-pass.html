@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0D57E2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="images/icon-192.png" />
+  <link rel="stylesheet" href="mobile.css" />
+  <title>Tourist Home — muvmi</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone Frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 200;
+    }
+
+    /* ── Blue Header ── */
+    .home-header {
+      background: #0D57E2;
+      border-radius: 0 0 32px 32px;
+      height: 345px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+      overflow: visible;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+    }
+    .status-time { font-size: 17px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    /* Header top row: Day Pass + Exit */
+    .header-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      margin-top: 5px;
+    }
+    .day-pass-badge {
+      background: #0A46B5;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+    }
+    .day-pass-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      white-space: nowrap;
+      letter-spacing: 0.25px;
+    }
+    .btn-exit {
+      border: 1px solid #0A46B5;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      background: transparent;
+      cursor: pointer;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.25px;
+    }
+
+    /* Greeting */
+    .header-greeting {
+      padding: 16px 16px 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 36px;
+      letter-spacing: 0.25px;
+    }
+
+    /* Map Preview Card */
+    .map-preview-card {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 157px;
+      width: 361px;
+      height: 212px;
+      background: #E7EEFC;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.25);
+      overflow: hidden;
+      z-index: 5;
+      cursor: pointer;
+    }
+    .map-preview-card > img {
+      width: 100%;
+      height: 785px;
+      object-fit: cover;
+      object-position: center 24%;
+      display: block;
+      margin-top: -188px;
+    }
+    .map-search-bar {
+      position: absolute;
+      top: 9px; left: 7px; right: 7px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+    }
+    .map-search-pin { flex-shrink: 0; width: 20px; height: 20px; }
+    .map-search-text { font-size: 16px; font-weight: 600; color: #909090; letter-spacing: 0.25px; white-space: nowrap; }
+    .map-car-label {
+      position: absolute;
+      bottom: 14px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(231,238,252,0.8);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px; font-weight: 500; color: #4F4F4F;
+      white-space: nowrap; letter-spacing: 0.25px;
+    }
+
+    /* ── Scrollable Content ── */
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      padding-bottom: 16px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .scroll-content::-webkit-scrollbar { display: none; }
+    .content-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 56px 16px 0;
+    }
+
+    /* Section title */
+    .section-title {
+      font-size: 16px; font-weight: 600; color: #4F4F4F;
+      letter-spacing: 0.25px; line-height: 24px; margin-bottom: 8px;
+    }
+
+    /* Categories */
+    .categories-row {
+      display: flex; gap: 16px; overflow-x: auto;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .categories-row::-webkit-scrollbar { display: none; }
+    .category-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; width: 56px; cursor: pointer;
+    }
+    .category-icon-box {
+      width: 56px; height: 52px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cat-all       { background: rgba(240,85,85,0.2); }
+    .cat-sight     { background: #E7EEFC; }
+    .cat-restaurant{ background: rgba(75,205,130,0.2); }
+    .cat-cafe      { background: rgba(79,70,229,0.2); }
+    .cat-mall      { background: rgba(255,220,45,0.2); }
+    .cat-activity  { background: rgba(240,165,85,0.2); }
+    .category-label {
+      font-size: 12px; font-weight: 500; color: #4F4F4F;
+      text-align: center; letter-spacing: 0.25px; line-height: 18px;
+      width: 100%; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Banner Carousel */
+    .banner-scroll {
+      display: flex; gap: 8px; overflow-x: auto;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      margin: 0 -16px; padding: 0 16px;
+      align-items: center;
+    }
+    .banner-scroll::-webkit-scrollbar { display: none; }
+    .banner-card {
+      flex: 0 0 361px; height: 144px;
+      border-radius: 16px; overflow: hidden; position: relative;
+      background: #E7EEFC;
+    }
+    .banner-card > img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    .banner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.82) 100%);
+    }
+    .banner-read-more {
+      position: absolute; bottom: 14px; right: 14px;
+      font-size: 12px; font-weight: 500; color: #fff;
+      text-decoration: underline; letter-spacing: 0.25px; white-space: nowrap;
+    }
+
+    /* Day Pass promo card */
+    .day-pass-card {
+      flex: 0 0 361px;
+      background: #E7EEFC;
+      border-radius: 24px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: auto;
+    }
+    .day-pass-card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .day-pass-card-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .day-pass-card-title {
+      font-size: 16px; font-weight: 600; color: #0D57E2;
+      letter-spacing: 0.25px; line-height: 24px;
+    }
+    .day-pass-card-desc {
+      font-size: 14px; font-weight: 500; color: #4F4F4F;
+      letter-spacing: 0.25px; line-height: 22px;
+    }
+    .day-pass-card-buttons {
+      display: flex;
+      gap: 16px;
+    }
+    .btn-redeem-pass {
+      flex: 1;
+      border: 1px solid #0D57E2;
+      border-radius: 24px;
+      background: transparent;
+      color: #0D57E2;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 0.25px;
+      padding: 4px 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-buy-pass-card {
+      flex: 1;
+      background: #0D57E2;
+      border: none;
+      border-radius: 24px;
+      color: #fff;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 0.25px;
+      padding: 4px 16px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Place Cards */
+    .place-scroll {
+      display: flex; gap: 12px; overflow-x: auto;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      margin: 0 -16px; padding: 0 16px;
+    }
+    .place-scroll::-webkit-scrollbar { display: none; }
+    .place-card {
+      flex-shrink: 0; width: 206px;
+      background: #fff; border-radius: 8px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      overflow: hidden; cursor: pointer;
+    }
+    .place-card-img-wrap { position: relative; height: 154px; overflow: hidden; background: #E7EEFC; }
+    .place-card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .bookmark-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 20px; height: 20px; cursor: pointer;
+      background: none; border: none; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .place-card-body { padding: 8px; height: 87px; position: relative; overflow: hidden; }
+    .place-card-name {
+      font-size: 14px; font-weight: 600; color: #4F4F4F;
+      line-height: 22px; letter-spacing: 0.25px;
+      height: 45px; overflow: hidden;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .place-card-dist {
+      position: absolute; bottom: 8px; right: 8px;
+      font-size: 12px; font-weight: 500; color: #909090;
+      letter-spacing: 0.25px; line-height: 18px; white-space: nowrap;
+    }
+
+    /* Recommended Trips */
+    .pack-scroll {
+      display: flex; align-items: flex-start; gap: 10px; overflow-x: auto;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      margin: 0 -16px; padding: 0 16px;
+    }
+    .pack-scroll::-webkit-scrollbar { display: none; }
+    .trip-card-h {
+      flex-shrink: 0; width: 308px; background: #fff;
+      border-radius: 8px; box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .trip-card-h .card-image-wrap { height: 123px; overflow: hidden; position: relative; flex-shrink: 0; }
+    .trip-card-h .card-image { position: absolute; top: -37px; left: 0; width: 100%; height: 210px; object-fit: cover; }
+    .trip-card-h .card-body { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+    .trip-card-h .card-title { font-size: 14px; font-weight: 600; color: #0D57E2; letter-spacing: 0.25px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trip-card-h .card-desc { font-size: 14px; font-weight: 500; color: #4F4F4F; letter-spacing: 0.25px; line-height: 22px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .trip-card-h .card-tags { position: relative; height: 54px; overflow: hidden; }
+    .trip-card-h .card-tags::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 20px; background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #fff 100%); pointer-events: none; }
+    .trip-card-h .card-tag { position: absolute; background: #E7EEFC; border-radius: 16px; padding: 2px 8px; font-size: 12px; font-weight: 500; color: #4F4F4F; letter-spacing: 0.25px; line-height: 20px; white-space: nowrap; }
+    .trip-card-h .card-tags-wrap { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .trip-card-h .see-all { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 4px; }
+    .trip-card-h .see-all-line { flex: 1; height: 1px; background: #E7EEFC; }
+    .trip-card-h .see-all-text { font-size: 12px; font-weight: 600; color: #0D57E2; white-space: nowrap; letter-spacing: 0.25px; }
+    .trip-card-h .card-footer { padding: 0 16px 16px; }
+    .trip-card-h .btn-add-all {
+      width: 100%; background: #0D57E2; color: #fff;
+      border: none; border-radius: 24px; padding: 8px 12px; height: 40px;
+      font-size: 14px; font-weight: 600; letter-spacing: 0.25px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .trip-card-h .btn-add-all.added { background: #0D57E2; }
+    .trip-card-h .btn-check-icon { display: none; flex-shrink: 0; }
+    .trip-card-h .btn-add-all.added .btn-check-icon { display: block; }
+
+    /* Bottom Tab Bar */
+    .tab-bar {
+      flex-shrink: 0; height: 60px; background: #fff;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      display: flex; align-items: center; padding: 7px 16px;
+    }
+    .tab-bar-inner { display: flex; align-items: center; width: 100%; }
+    .tab-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 6px 0; cursor: pointer; text-decoration: none; gap: 2px;
+    }
+    .tab-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+    .tab-icon img { width: 20px; height: 20px; }
+    .tab-label { font-size: 12px; font-weight: 600; color: #4F4F4F; letter-spacing: 0.25px; line-height: 18px; }
+    .tab-item.active .tab-label { color: #0D57E2; }
+    .tab-badge {
+      position: absolute; top: 2px; left: calc(50% + 8px);
+      min-width: 16px; height: 16px; background: #0D57E2; border-radius: 8px;
+      padding: 0 4px; font-size: 10px; font-weight: 700; color: #fff;
+      display: flex; align-items: center; justify-content: center; line-height: 1;
+    }
+    .tab-badge:empty { min-width: 8px; height: 8px; padding: 0; border-radius: 50%; }
+
+    /* Home Indicator */
+    .home-indicator {
+      height: 34px; background: #fff;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .home-indicator-bar { width: 130px; height: 5px; background: #1a1a1a; border-radius: 100px; }
+
+    /* Toast */
+    .toast {
+      position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.75); color: #fff; border-radius: 20px;
+      padding: 8px 18px; font-size: 13px; font-weight: 500;
+      white-space: nowrap; opacity: 0; transition: opacity .25s;
+      pointer-events: none; z-index: 50;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Redeem popup (bottom sheet) ── */
+    .redeem-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 50;
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .redeem-overlay.open { opacity: 1; pointer-events: all; }
+
+    .redeem-sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-radius: 24px 24px 0 0;
+      z-index: 51;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(0.32,0.72,0,1);
+      padding-bottom: 24px;
+    }
+    .redeem-sheet.open { transform: translateY(0); }
+
+    .redeem-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 24px; height: 24px;
+      background: none; border: none; cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .redeem-mascot {
+      display: flex; justify-content: center;
+      padding-top: 8px;
+    }
+    .redeem-mascot img { width: 140px; height: 140px; object-fit: contain; }
+    .redeem-title {
+      font-size: 20px; font-weight: 600; color: #0D57E2;
+      text-align: center; letter-spacing: 0.25px; line-height: 30px;
+      margin-top: 4px;
+    }
+    .redeem-body {
+      padding: 16px 16px 0;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .redeem-label {
+      font-size: 16px; font-weight: 600; color: #4F4F4F;
+      letter-spacing: 0.25px; line-height: 24px;
+    }
+    .redeem-input {
+      width: 100%; height: 46px;
+      border: 1px solid #909090; border-radius: 12px;
+      padding: 0 12px; font-size: 14px; color: #4F4F4F;
+      outline: none; font-family: inherit;
+    }
+    .redeem-input:focus { border-color: #0D57E2; }
+    .btn-apply {
+      width: 100%; height: 48px;
+      background: #CCC; color: #909090;
+      font-size: 18px; font-weight: 600;
+      border: none; border-radius: 24px; cursor: not-allowed;
+      font-family: inherit;
+      transition: background .15s, color .15s;
+    }
+    .btn-apply.active { background: #0D57E2; color: #fff; cursor: pointer; }
+    .redeem-divider {
+      text-align: center; font-size: 14px; font-weight: 500;
+      color: #909090; letter-spacing: 0.25px;
+    }
+    .btn-buy {
+      width: 100%; height: 48px;
+      background: #0D57E2; color: #fff;
+      font-size: 18px; font-weight: 600;
+      border: none; border-radius: 24px; cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ── How It Works overlay ── */
+    .how-overlay {
+      position: absolute; inset: 0;
+      z-index: 60;
+      opacity: 0; pointer-events: none;
+      transition: opacity .35s;
+      background: #000;
+    }
+    .how-overlay.open { opacity: 1; pointer-events: all; }
+
+    .how-bg {
+      position: absolute; inset: 0;
+      background: url('images/figma/how-bg.png') center/cover no-repeat;
+    }
+    .how-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .how-sheet {
+      position: absolute;
+      top: 60px; left: 0; right: 0; bottom: 0;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      overflow-y: auto;
+      scrollbar-width: none;
+      transform: translateY(100%);
+      transition: transform .4s cubic-bezier(0.32,0.72,0,1);
+      z-index: 2;
+    }
+    .how-sheet::-webkit-scrollbar { display: none; }
+    .how-overlay.open .how-sheet { transform: translateY(0); }
+
+    .how-sheet-title {
+      font-size: 40px; font-weight: 700; color: #0D57E2;
+      line-height: 60px; letter-spacing: 0.25px;
+      padding: 24px 46px 0;
+    }
+
+    .how-steps {
+      padding: 24px 26px 0;
+      display: flex; flex-direction: column; gap: 24px;
+    }
+    .how-step {
+      display: flex; gap: 24px; align-items: flex-start;
+    }
+    .how-step-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #0049E6;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .how-step-icon.red { background: #F05555; }
+    .how-step-icon img { width: 20px; height: 20px; object-fit: contain; }
+    .how-step-body { flex: 1; padding-bottom: 8px; border-bottom: 1px solid #F5F5F5; }
+    .how-step:last-child .how-step-body { border-bottom: none; }
+    .how-step-title {
+      font-size: 20px; font-weight: 600; color: #2A2B51;
+      line-height: 30px; letter-spacing: 0.25px;
+    }
+    .how-step-desc {
+      font-size: 14px; font-weight: 500; color: #575881;
+      line-height: 22px; letter-spacing: 0.25px; margin-top: 4px;
+    }
+
+    .how-btn {
+      margin: 24px 18px 32px;
+      width: calc(100% - 36px);
+      height: 44px;
+      background: #0D57E2; color: #fff;
+      border: none; border-radius: 24px;
+      font-size: 18px; font-weight: 600;
+      letter-spacing: 0.25px; cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ── Stop Bottom Sheet ── */
+    .sheet-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 50; opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .sheet-overlay.open { opacity: 1; pointer-events: all; }
+    .bottom-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #fff; border-radius: 20px 20px 0 0;
+      z-index: 51; display: flex; flex-direction: column;
+      max-height: 85%;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(0.32,0.72,0,1);
+    }
+    .bottom-sheet.open { transform: translateY(0); }
+    .sheet-header {
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      padding: 24px 40px 16px; flex-shrink: 0;
+    }
+    .sheet-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; cursor: pointer;
+      padding: 4px; color: #4F4F4F;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sheet-title { font-size: 16px; font-weight: 600; color: #0D57E2; letter-spacing: 0.25px; line-height: 24px; }
+    .sheet-subtitle { font-size: 13px; font-weight: 400; color: #909090; letter-spacing: 0.25px; line-height: 20px; margin-top: 2px; }
+    .sheet-list { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 16px; }
+    .sheet-list::-webkit-scrollbar { display: none; }
+    .sheet-stop-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid #F5F5F5;
+      cursor: pointer; user-select: none;
+    }
+    .sheet-stop-item:last-child { border-bottom: none; }
+    .sheet-stop-thumb { width: 48px; height: 48px; border-radius: 9px; object-fit: cover; flex-shrink: 0; background: #E7EEFC; }
+    .sheet-stop-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .sheet-stop-name { font-size: 14px; font-weight: 600; color: #4F4F4F; line-height: 22px; letter-spacing: 0.25px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .15s; }
+    .sheet-stop-meta { display: flex; align-items: center; gap: 8px; }
+    .sheet-stop-dist { font-size: 12px; color: #939598; line-height: 18px; }
+    .sheet-stop-tag { background: #E7EEFC; border-radius: 8px; padding: 2px 8px; font-size: 12px; color: #4F4F4F; line-height: 18px; white-space: nowrap; }
+    .sheet-stop-tag.green { background: #E7FCED; }
+    .sheet-stop-item.unchecked .sheet-stop-name { color: #C0C0C0; }
+    .sheet-stop-item.already-added { opacity: 0.45; pointer-events: none; }
+    .sheet-stop-item.already-added .sheet-stop-name { color: #909090; }
+    .badge-added { flex-shrink: 0; background: #E7EEFC; color: #0D57E2; border-radius: 8px; padding: 2px 8px; font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap; }
+    .sheet-checkbox { width: 24px; height: 24px; border: 1.5px solid #909090; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #fff; transition: border-color .15s, background .15s; }
+    .sheet-checkbox.checked { background: #0D57E2; border-color: #0D57E2; }
+    .sheet-footer { padding: 12px 16px 24px; flex-shrink: 0; }
+    .sheet-btn-add { width: 100%; background: #0D57E2; color: #fff; border: none; border-radius: 24px; padding: 8px 12px; height: 44px; font-size: 18px; font-weight: 600; letter-spacing: 0.25px; cursor: pointer; }
+    .sheet-btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ── Scrollable Content ── -->
+  <div class="scroll-content">
+
+    <!-- Blue Header -->
+    <div class="home-header">
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0" y="7" width="3" height="5" rx="1" fill="white"/>
+            <rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="white"/>
+            <rect x="9" y="2" width="3" height="10" rx="1" fill="white"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="white" opacity="0.4"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="white"/>
+            <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="white"/>
+            <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="white"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="white" stroke-opacity="0.5"/>
+            <rect x="2" y="2" width="15" height="8" rx="2" fill="white"/>
+            <path d="M23 4v4a2 2 0 000-4z" fill="white" fill-opacity="0.4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Day Pass + Exit -->
+      <div class="header-top-row">
+        <div class="day-pass-badge">
+          <span class="day-pass-label">Day Pass</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 5.5A1.5 1.5 0 012.5 4h11A1.5 1.5 0 0115 5.5v1a1.5 1.5 0 010 3v1A1.5 1.5 0 0113.5 12h-11A1.5 1.5 0 011 10.5v-1a1.5 1.5 0 010-3v-1z" stroke="white" stroke-width="1.2"/>
+          </svg>
+        </div>
+        <button class="btn-exit" onclick="window.location.href='prehome.html'">
+          Exit
+          <img src="images/figma/icon-exit.svg" width="16" height="16" alt="" />
+        </button>
+      </div>
+
+      <!-- Greeting -->
+      <p class="header-greeting">Sawasdee, 🙏🏻</p>
+
+      <!-- Map Preview Card -->
+      <div class="map-preview-card" onclick="window.location.href='map.html'">
+        <img src="images/figma/map-preview.png" alt="Map preview" />
+        <div class="map-search-bar" onclick="event.stopPropagation(); localStorage.setItem('booking_mode','dropoff'); localStorage.setItem('booking_pickup','Siam Paragon'); localStorage.removeItem('booking_dropoff'); window.location.href='requesting.html'" style="cursor:pointer;">
+          <img src="images/figma/icon-map-pin.svg" class="map-search-pin" alt="" />
+          <span class="map-search-text">Where to go today?</span>
+        </div>
+        <div class="map-car-label">Click to request car</div>
+      </div>
+
+    </div><!-- /home-header -->
+
+    <div class="content-inner">
+
+      <!-- Categories -->
+      <div class="categories-row">
+        <div class="category-item" onclick="goToCategory('all')">
+          <div class="category-icon-box cat-all">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect x="3" y="3" width="9" height="9" rx="2" fill="#F05555"/>
+              <rect x="3" y="16" width="9" height="9" rx="2" fill="#F05555"/>
+              <rect x="16" y="3" width="9" height="9" rx="2" fill="#F05555"/>
+              <rect x="16" y="16" width="9" height="9" rx="2" fill="#F05555"/>
+            </svg>
+          </div>
+          <span class="category-label">All</span>
+        </div>
+        <div class="category-item" onclick="goToCategory('Landmark')">
+          <div class="category-icon-box cat-sight">
+            <img src="images/figma/cat-sightsee.svg" width="32" height="32" alt="" />
+          </div>
+          <span class="category-label" style="line-height:1.3">Sight<br>Seeing</span>
+        </div>
+        <div class="category-item" onclick="goToCategory('Restaurant')">
+          <div class="category-icon-box cat-restaurant">
+            <img src="images/figma/cat-restaurant.svg" width="32" height="32" alt="" />
+          </div>
+          <span class="category-label">Restaurant</span>
+        </div>
+        <div class="category-item" onclick="goToCategory('Cafe')">
+          <div class="category-icon-box cat-cafe">
+            <img src="images/figma/cat-cafe.svg" width="32" height="32" alt="" />
+          </div>
+          <span class="category-label">Cafe</span>
+        </div>
+        <div class="category-item" onclick="goToCategory('Mall')">
+          <div class="category-icon-box cat-mall">
+            <img src="images/figma/cat-mall.svg" width="32" height="32" alt="" />
+          </div>
+          <span class="category-label">Mall</span>
+        </div>
+        <div class="category-item" onclick="goToCategory('Activity')">
+          <div class="category-icon-box cat-activity">
+            <img src="images/figma/cat-activity.svg" width="32" height="32" alt="" />
+          </div>
+          <span class="category-label">Activity</span>
+        </div>
+      </div>
+
+      <!-- Banner Carousel -->
+      <div class="banner-scroll">
+        <!-- Day Pass promo card -->
+        <div class="day-pass-card">
+          <div class="day-pass-card-header">
+            <div class="day-pass-card-title-row">
+              <svg width="13" height="19" viewBox="0 0 13 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 7A1.5 1.5 0 012.5 5.5h8A1.5 1.5 0 0112 7v1a1.5 1.5 0 010 3v1A1.5 1.5 0 0110.5 13.5h-8A1.5 1.5 0 011 12v-1a1.5 1.5 0 010-3V7z" stroke="#0D57E2" stroke-width="1.2"/>
+              </svg>
+              <span class="day-pass-card-title">Explore your way with a Day Pass</span>
+            </div>
+            <p class="day-pass-card-desc">Ride e-Tuk Tuks all day with ONE SIMPLE PRICE. Book each ride here. No bargaining. No hidden fees</p>
+          </div>
+          <div class="day-pass-card-buttons">
+            <button class="btn-redeem-pass" onclick="openRedeemSheet()">Redeem Pass</button>
+            <button class="btn-buy-pass-card">Buy Pass</button>
+          </div>
+        </div>
+        <!-- Banner 2: Grand Palace -->
+        <div class="banner-card">
+          <img src="images/figma/banner-palace.png" alt="Grand Palace" />
+          <div class="banner-overlay"></div>
+          <p style="position:absolute;top:91px;left:14px;right:14px;font-size:14px;font-weight:600;color:#fff;line-height:22px;letter-spacing:0.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">50% discount Grand Palace tour ticket</p>
+          <a class="banner-read-more">Read More &gt;&gt;</a>
+        </div>
+        <!-- Banner 3: Forest Walk -->
+        <div class="banner-card">
+          <img src="images/figma/banner-forest.png" alt="Forest Walk" />
+          <div class="banner-overlay"></div>
+          <p style="position:absolute;top:91px;left:14px;right:14px;font-size:14px;font-weight:600;color:#fff;line-height:22px;letter-spacing:0.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Special Offer: Mystical Forest Walk - 40% Off</p>
+          <a class="banner-read-more">Learn More &gt;&gt;</a>
+        </div>
+      </div>
+
+      <!-- Bangkok in One Day -->
+      <div>
+        <p class="section-title">Bangkok in One Day</p>
+        <div class="place-scroll">
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-wat-phra-kaew.png" alt="Wat Phra Kaew" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">The Temple of the Emerald Buddha (Wat Phra Kaew)</p>
+              <span class="place-card-dist">1 km</span>
+            </div>
+          </div>
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-wat-trimit.png" alt="Wat Trimit" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Temple of The Golden Buddha (Wat Trimit)</p>
+              <span class="place-card-dist">900 m</span>
+            </div>
+          </div>
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-democracy.png" alt="Democracy Monument" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Democracy Monument</p>
+              <span class="place-card-dist">1.2 km</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Trips -->
+      <div>
+        <p class="section-title">Recommended trips</p>
+        <div class="pack-scroll" id="pack-scroll"></div>
+      </div>
+
+      <!-- Experience Local Dish -->
+      <div>
+        <p class="section-title">Experience Local Dish</p>
+        <div class="place-scroll">
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-supanniga.png" alt="Supanniga" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Supanniga Eating Room Tha Tien</p>
+              <span class="place-card-dist">1.8 km</span>
+            </div>
+          </div>
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-sri-trat.png" alt="Sri Trat" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Sri Trat Restaurant &amp; Bar</p>
+              <span class="place-card-dist">5.1 km</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top local spot -->
+      <div>
+        <p class="section-title">Top local spot</p>
+        <div class="place-scroll">
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-siam-paragon.png" alt="Siam Paragon" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Siam Paragon</p>
+              <span class="place-card-dist">6.5 km</span>
+            </div>
+          </div>
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-iconsiam.png" alt="Iconsiam" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Iconsiam</p>
+              <span class="place-card-dist">8 km</span>
+            </div>
+          </div>
+          <div class="place-card">
+            <div class="place-card-img-wrap">
+              <img src="images/figma/place-yaowarat.png" alt="Yaowarat" />
+              <button class="bookmark-btn"><img src="images/figma/icon-bookmark.svg" width="20" height="20" alt="" /></button>
+            </div>
+            <div class="place-card-body">
+              <p class="place-card-name">Yaowarat Road (Chinatown)</p>
+              <span class="place-card-dist">1.8 km</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-inner -->
+  </div><!-- /scroll-content -->
+
+  <!-- Bottom Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-bar-inner">
+      <div class="tab-item active">
+        <div class="tab-icon"><img src="images/figma/tab-home.svg" width="20" height="20" alt="Home" /></div>
+        <span class="tab-label" style="color:#0D57E2">Home</span>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon"><img src="images/figma/tab-inbox.svg" width="20" height="20" alt="Inbox" /></div>
+        <span class="tab-label">Inbox</span>
+      </div>
+      <a class="tab-item" href="planner.html" style="position:relative;">
+        <div class="tab-badge" id="plan-badge"></div>
+        <div class="tab-icon"><img src="images/figma/tab-plan.svg" width="20" height="20" alt="Plan" /></div>
+        <span class="tab-label">Plan</span>
+      </a>
+      <div class="tab-item">
+        <div class="tab-icon"><img src="images/figma/tab-activity.svg" width="20" height="20" alt="Activity" /></div>
+        <span class="tab-label">Activity</span>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon"><img src="images/figma/tab-more.svg" width="20" height="20" alt="More" /></div>
+        <span class="tab-label">More</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"><div class="home-indicator-bar"></div></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ── Stop Bottom Sheet ── -->
+  <div class="sheet-overlay" id="sheet-overlay"></div>
+  <div class="bottom-sheet" id="bottom-sheet">
+    <div class="sheet-header">
+      <button class="sheet-close" id="sheet-close" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M18 6L6 18M6 6l12 12" stroke="#4F4F4F" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <p class="sheet-title" id="sheet-title"></p>
+      <p class="sheet-subtitle">Tap a stop to include or exclude it from your plan</p>
+    </div>
+    <div class="sheet-list" id="sheet-list"></div>
+    <div class="sheet-footer">
+      <button class="sheet-btn-add" id="sheet-btn-add">Add (0) stops to plan</button>
+    </div>
+  </div>
+
+  <!-- ── Redeem popup overlay ── -->
+  <div class="redeem-overlay" id="redeem-overlay" onclick="closeRedeemSheet()"></div>
+
+  <div class="redeem-sheet" id="redeem-sheet">
+    <button class="redeem-close" onclick="closeRedeemSheet()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M18 6L6 18M6 6l12 12" stroke="#4F4F4F" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="redeem-mascot">
+      <img src="images/figma/travel-pass-mascot.png" alt="muvmi mascot" />
+    </div>
+    <p class="redeem-title">Explore Travel Pass</p>
+    <div class="redeem-body">
+      <div>
+        <p class="redeem-label">Insert your code to activate pass</p>
+      </div>
+      <input class="redeem-input" id="redeem-input" type="text" placeholder="" oninput="onCodeInput()" />
+      <button class="btn-apply" id="btn-apply" disabled>Apply</button>
+      <p class="redeem-divider">No Pass yet? Tap to get one</p>
+      <button class="btn-buy" onclick="window.location.href='index.html'">Buy Pass</button>
+    </div>
+  </div>
+
+  <!-- ── How It Works overlay ── -->
+  <div class="how-overlay" id="how-overlay">
+    <div class="how-bg"></div>
+    <div class="how-sheet">
+      <p class="how-sheet-title">How it works</p>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="how-step-icon">
+            <img src="images/figma/how-icon-destination.svg" alt="" />
+          </div>
+          <div class="how-step-body">
+            <p class="how-step-title">1. Pick your destination</p>
+            <p class="how-step-desc">Brown attractions or select where you want to go</p>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">
+            <img src="images/figma/how-icon-book.svg" alt="" />
+          </div>
+          <div class="how-step-body">
+            <p class="how-step-title">2. Book a ride</p>
+            <p class="how-step-desc">Request a ride in just a few taps.</p>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">
+            <img src="images/figma/how-icon-pickup.svg" alt="" />
+          </div>
+          <div class="how-step-body">
+            <p class="how-step-title">3. Head to Pick-up Point</p>
+            <p class="how-step-desc">Walk to a nearby pick-up point. We'll meet you there.</p>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon">
+            <img src="images/figma/how-icon-scan.svg" alt="" />
+          </div>
+          <div class="how-step-body">
+            <p class="how-step-title">4. Scan &amp; Ride</p>
+            <p class="how-step-desc">Scan QR code. Hop in and enjoy the breezy ride through Bangkok's alleys.</p>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="how-step-icon red">
+            <img src="images/figma/how-icon-explore.svg" alt="" />
+          </div>
+          <div class="how-step-body">
+            <p class="how-step-title">5. Explore Like a Local</p>
+            <p class="how-step-desc">Get around easily, without the hassle.</p>
+          </div>
+        </div>
+      </div>
+      <button class="how-btn" onclick="window.location.href='index.html'">let's start</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script src="api.js"></script>
+<script>
+  const API_BASE = '';
+  let PACKS = {};
+
+  function goToCategory(cat) {
+    localStorage.setItem('booking_mode', 'dropoff');
+    localStorage.setItem('booking_pickup', 'Siam Paragon');
+    localStorage.setItem('booking_pickup_lat', 13.7462);
+    localStorage.setItem('booking_pickup_lng', 100.5347);
+    localStorage.removeItem('booking_dropoff');
+    localStorage.setItem('booking_category', cat);
+    window.location.href = 'requesting.html';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function updatePlanBadge(count) {
+    const badge = document.getElementById('plan-badge');
+    badge.textContent = count > 0 ? count : '';
+  }
+
+  // How It Works overlay
+  function showHowItWorks() {
+    closeRedeemSheet();
+    document.getElementById('how-overlay').classList.add('open');
+  }
+
+  // Redeem sheet
+  function openRedeemSheet() {
+    document.getElementById('redeem-overlay').classList.add('open');
+    document.getElementById('redeem-sheet').classList.add('open');
+  }
+  function closeRedeemSheet() {
+    document.getElementById('redeem-overlay').classList.remove('open');
+    document.getElementById('redeem-sheet').classList.remove('open');
+  }
+  function onCodeInput() {
+    const val = document.getElementById('redeem-input').value.trim();
+    const btn = document.getElementById('btn-apply');
+    if (val.length > 0) {
+      btn.classList.add('active');
+      btn.disabled = false;
+      btn.onclick = () => showHowItWorks();
+    } else {
+      btn.classList.remove('active');
+      btn.disabled = true;
+      btn.onclick = null;
+    }
+  }
+
+  // ── Bottom Sheet ──
+  let checkedStops  = new Set();
+  let currentPackId = null;
+
+  const CHECKMARK_SVG = `<svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+    <path d="M1 4.5L4 7.5L11 1" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+  function closeSheet() {
+    document.getElementById('sheet-overlay').classList.remove('open');
+    document.getElementById('bottom-sheet').classList.remove('open');
+  }
+
+  async function openSheet(packId) {
+    const pack = PACKS[packId];
+    if (!pack) return;
+    currentPackId = packId;
+    const plannerData  = await fetch(`${API_BASE}/api/planner`).then(r => r.json());
+    const alreadyAdded = new Set((plannerData.selectedPlaces || []).map(p => p.id));
+    checkedStops = new Set(pack.stops.filter(s => !alreadyAdded.has(s.id)).map(s => s.id));
+    document.getElementById('sheet-title').textContent = pack.title;
+    const list = document.getElementById('sheet-list');
+    list.innerHTML = '';
+    pack.stops.forEach(stop => list.appendChild(createStopItem(stop, alreadyAdded)));
+    updateSheetButton();
+    document.getElementById('sheet-overlay').classList.add('open');
+    document.getElementById('bottom-sheet').classList.add('open');
+  }
+
+  function createStopItem(stop, alreadyAdded) {
+    const isAdded   = alreadyAdded.has(stop.id);
+    const isChecked = checkedStops.has(stop.id);
+    const tagClass  = stop.tagType === 'green' ? ' green' : '';
+    const item = document.createElement('div');
+    item.className = 'sheet-stop-item' + (isAdded ? ' already-added' : (!isChecked ? ' unchecked' : ''));
+    item.dataset.stopId = stop.id;
+    const rightSlot = isAdded
+      ? `<span class="badge-added">Added</span>`
+      : `<div class="sheet-checkbox${isChecked ? ' checked' : ''}">${isChecked ? CHECKMARK_SVG : ''}</div>`;
+    item.innerHTML = `
+      <img class="sheet-stop-thumb" src="${stop.img}" alt="${stop.name}" />
+      <div class="sheet-stop-info">
+        <span class="sheet-stop-name">${stop.name}</span>
+        <div class="sheet-stop-meta">
+          <span class="sheet-stop-dist">${stop.dist}</span>
+          <span class="sheet-stop-tag${tagClass}">${stop.tag}</span>
+        </div>
+      </div>
+      ${rightSlot}
+    `;
+    if (!isAdded) item.addEventListener('click', () => toggleStop(stop, item));
+    return item;
+  }
+
+  function toggleStop(stop, item) {
+    const cb = item.querySelector('.sheet-checkbox');
+    if (checkedStops.has(stop.id)) {
+      checkedStops.delete(stop.id);
+      cb.classList.remove('checked');
+      cb.innerHTML = '';
+      item.classList.add('unchecked');
+    } else {
+      checkedStops.add(stop.id);
+      cb.classList.add('checked');
+      cb.innerHTML = CHECKMARK_SVG;
+      item.classList.remove('unchecked');
+    }
+    updateSheetButton();
+  }
+
+  function updateSheetButton() {
+    const btn = document.getElementById('sheet-btn-add');
+    const count = checkedStops.size;
+    btn.textContent = `Add (${count}) stops to plan`;
+    btn.disabled    = count === 0;
+  }
+
+  document.getElementById('sheet-overlay').addEventListener('click', closeSheet);
+  document.getElementById('sheet-close').addEventListener('click', closeSheet);
+
+  document.getElementById('sheet-btn-add').addEventListener('click', async () => {
+    if (!currentPackId) return;
+    const pack = PACKS[currentPackId];
+    const plannerData = await fetch(`${API_BASE}/api/planner`).then(r => r.json());
+    const existingIds = new Set(plannerData.selectedPlaces.map(p => p.id));
+    pack.stops.forEach(stop => {
+      if (!checkedStops.has(stop.id) || existingIds.has(stop.id)) return;
+      plannerData.selectedPlaces.push({ id: stop.id, name: stop.name, dist: stop.dist, tag: stop.tag, tagType: stop.tagType || '', imgSrc: stop.img });
+      existingIds.add(stop.id);
+    });
+    const count = checkedStops.size;
+    const totalInPlan = pack.stops.filter(s => existingIds.has(s.id)).length;
+    plannerData.addedPacks = plannerData.addedPacks || {};
+    plannerData.addedPacks[currentPackId] = totalInPlan;
+    await fetch(`${API_BASE}/api/planner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(plannerData) });
+    closeSheet();
+    showToast(`${count} stop${count !== 1 ? 's' : ''} added to your plan`);
+    updatePlanBadge(plannerData.selectedPlaces.length);
+    const btn = document.querySelector(`.btn-add-all[data-pack-id="${currentPackId}"]`);
+    if (btn) { btn.classList.add('added'); btn.querySelector('.btn-add-label').textContent = `${totalInPlan} stops added`; }
+  });
+
+  // ── Add all / direct add ──
+  async function addPackToPlan(packId, pack, btn) {
+    btn.disabled = true;
+    btn.querySelector('.btn-add-label').textContent = 'Adding…';
+    try {
+      const plannerData = await fetch(`${API_BASE}/api/planner`).then(r => r.json());
+      const packStops   = PACKS[packId]?.stops || [];
+      const existing    = plannerData.selectedPlaces || [];
+      const existingIds = new Set(existing.map(p => p.id));
+      const newStops    = packStops.filter(s => !existingIds.has(s.id)).map(s => ({ id: s.id, name: s.name, dist: s.dist, tag: s.tag, tagType: s.tagType || '', imgSrc: s.img }));
+      const updated     = [...existing, ...newStops];
+      const addedPacks  = { ...(plannerData.addedPacks || {}), [packId]: packStops.length };
+      await fetch(`${API_BASE}/api/planner`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ selectedPlaces: updated, addedPacks }) });
+      btn.classList.add('added');
+      btn.disabled = false;
+      btn.querySelector('.btn-add-label').textContent = `${packStops.length} stops added`;
+      showToast(`${newStops.length} stops added to your plan`);
+      updatePlanBadge(updated.length);
+    } catch (e) {
+      btn.disabled = false;
+      btn.querySelector('.btn-add-label').textContent = 'Add all stops to plan';
+      showToast('Something went wrong');
+    }
+  }
+
+  // Load recommended trips
+  async function loadPacks() {
+    const [stopsData, plannerData] = await Promise.all([
+      fetch(`${API_BASE}/api/stops`).then(r => r.json()),
+      fetch(`${API_BASE}/api/planner`).then(r => r.json()),
+    ]);
+    PACKS = stopsData.packs || {};
+    const addedPacks = plannerData.addedPacks || {};
+    updatePlanBadge((plannerData.selectedPlaces || []).length);
+
+    const container = document.getElementById('pack-scroll');
+    const TAG_POS = [
+      { top:0, left:0 }, { top:0, left:80 }, { top:0, left:152 },
+      { top:30, left:0 }, { top:30, left:140 },
+    ];
+    Object.entries(PACKS).forEach(([packId, pack]) => {
+      const isAdded    = !!addedPacks[packId];
+      const addedCount = addedPacks[packId] || 0;
+      const tags = pack.tags || pack.stops.slice(0,5).map(s => s.name);
+      const tagHtml = tags.map((tag,i) => {
+        const pos = TAG_POS[i] || { top:30, left:0 };
+        return `<span class="card-tag" style="top:${pos.top}px;left:${pos.left}px">${tag}</span>`;
+      }).join('');
+      const card = document.createElement('div');
+      card.className = 'trip-card-h';
+      card.innerHTML = `
+        <div class="card-image-wrap">
+          <img class="card-image" src="${pack.img}" alt="${pack.title}" />
+        </div>
+        <div class="card-body">
+          <div>
+            <p class="card-title">${pack.title}</p>
+            <p class="card-desc">${pack.desc}</p>
+          </div>
+          <div class="card-tags-wrap">
+            <div class="card-tags">${tagHtml}</div>
+            <div class="see-all">
+              <div class="see-all-line"></div>
+              <span class="see-all-text">See all ${pack.stops.length} stops</span>
+              <div class="see-all-line"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-add-all${isAdded ? ' added' : ''}" data-pack-id="${packId}">
+            <svg class="btn-check-icon" width="16" height="12" viewBox="0 0 18 14" fill="none">
+              <path d="M1.5 7l5 5L16.5 1.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="btn-add-label">${isAdded ? `${addedCount} stops added` : 'Add all stops to plan'}</span>
+          </button>
+        </div>
+      `;
+      const btn = card.querySelector('.btn-add-all');
+      btn.addEventListener('click', async () => {
+        if (btn.classList.contains('added')) {
+          const pd = await fetch(`${API_BASE}/api/planner`).then(r => r.json());
+          const addedIds  = new Set((pd.selectedPlaces || []).map(p => p.id));
+          const hasUnadded = (pack.stops || []).some(s => !addedIds.has(s.id));
+          if (hasUnadded) { openSheet(packId); } else { showToast('All stops from this trip are already in your plan'); }
+          return;
+        }
+        addPackToPlan(packId, pack, btn);
+      });
+      card.querySelector('.see-all').addEventListener('click', () => openSheet(packId));
+      container.appendChild(card);
+    });
+  }
+
+  // Drag-to-scroll
+  function makeDraggable(el, { vertical = false } = {}) {
+    let isDown = false, axis = null, startX, startY, scrollLeft, scrollTop;
+    let velX = 0, velY = 0, lastX = 0, lastY = 0, lastT = 0, rafId = null;
+    const AXIS_THRESHOLD = 5;
+    el.style.cursor = 'grab'; el.style.userSelect = 'none';
+    function cancelMomentum() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+    function applyMomentum() {
+      if (axis === 'x') { velX *= 0.92; el.scrollLeft += velX; if (Math.abs(velX) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      else if (axis === 'y') { velY *= 0.92; el.scrollTop += velY; if (Math.abs(velY) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      rafId = null;
+    }
+    el.addEventListener('mousedown', e => {
+      if (e.target.closest('button, a, input, [role="button"]')) return;
+      cancelMomentum(); isDown = true; axis = null; el.style.cursor = 'grabbing';
+      startX = e.pageX; startY = e.pageY; scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+      lastX = e.pageX; lastY = e.pageY; lastT = performance.now(); velX = 0; velY = 0;
+    });
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      const dx = e.pageX - startX, dy = e.pageY - startY;
+      if (!axis) {
+        if (Math.abs(dx) > AXIS_THRESHOLD || Math.abs(dy) > AXIS_THRESHOLD)
+          axis = (!vertical || Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+        else return;
+      }
+      e.preventDefault();
+      const now = performance.now(), dt = now - lastT || 1;
+      if (axis === 'x') { velX = (lastX - e.pageX) / dt * 12; el.scrollLeft = scrollLeft - dx; }
+      else { velY = (lastY - e.pageY) / dt * 12; el.scrollTop = scrollTop - dy; }
+      lastX = e.pageX; lastY = e.pageY; lastT = now;
+    });
+    const release = () => {
+      if (!isDown) return; isDown = false; el.style.cursor = 'grab';
+      if (axis !== null) el.addEventListener('click', e => e.stopPropagation(), { capture: true, once: true });
+      rafId = requestAnimationFrame(applyMomentum);
+    };
+    el.addEventListener('mouseup', release);
+    el.addEventListener('mouseleave', release);
+  }
+
+  makeDraggable(document.querySelector('.scroll-content'), { vertical: true });
+  makeDraggable(document.querySelector('.categories-row'));
+  makeDraggable(document.querySelector('.banner-scroll'));
+  makeDraggable(document.querySelector('.pack-scroll'));
+  document.querySelectorAll('.place-scroll').forEach(el => makeDraggable(el));
+
+  loadPacks();
+
+  // Auto-open redeem sheet when coming from login (?redeem=1)
+  if (new URLSearchParams(location.search).get('redeem') === '1') {
+    openRedeemSheet();
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+</script>
+</body>
+</html>

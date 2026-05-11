@@ -232,17 +232,6 @@
       "lng": 100.5004
     },
     {
-      "id": "p22",
-      "name": "Damnoen Saduak Floating Market",
-      "dist": "80 km",
-      "tag": "Market",
-      "tagType": "green",
-      "category": "Activity",
-      "img": "images/places/market.jpg",
-      "lat": 13.5195,
-      "lng": 99.9573
-    },
-    {
       "id": "p23",
       "name": "Benchakitti Forest Park",
       "dist": "7 km",

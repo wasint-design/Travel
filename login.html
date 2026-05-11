@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393px, initial-scale=1.0" />
+  <title>Log in — muvmi</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dynamic Island notch */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 200;
+    }
+
+    /* ── Blue top container ── */
+    .top-container {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 115px;
+      background: #0D57E2;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50px;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 20px 6px;
+      z-index: 10;
+    }
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.2px;
+    }
+    .status-icons {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── Back button ── */
+    .btn-back {
+      position: absolute;
+      top: 68px;
+      left: 18px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    /* ── Log in title ── */
+    .header-title {
+      position: absolute;
+      top: 66px;
+      left: 50%;
+      translate: -50% 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.25px;
+      line-height: 30px;
+      white-space: nowrap;
+    }
+
+    /* ── Mascot ── */
+    .mascot {
+      position: absolute;
+      top: 136px;
+      left: 50%;
+      translate: -50% 0;
+      width: 167px;
+      height: 167px;
+    }
+    .mascot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* ── Welcome title ── */
+    .welcome-title {
+      position: absolute;
+      top: 320px;
+      left: 50%;
+      translate: -50% 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #4F4F4F;
+      letter-spacing: 0.25px;
+      line-height: 36px;
+      white-space: nowrap;
+    }
+
+    /* ── Login form ── */
+    .login-form {
+      position: absolute;
+      top: 351px;
+      left: 16px;
+      width: 361px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #909090;
+      letter-spacing: 0.25px;
+      text-align: center;
+      margin-bottom: -12px;
+    }
+
+    /* Country + phone row */
+    .phone-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .country-code {
+      flex-shrink: 0;
+      height: 48px;
+      background: #fff;
+      border: 1px solid #E7EEFC;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      cursor: pointer;
+    }
+    .country-flag {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .country-dial {
+      font-size: 14px;
+      color: #4F4F4F;
+      letter-spacing: 0.25px;
+    }
+    .country-chevron {
+      width: 10px;
+      height: 10px;
+    }
+
+    .phone-input {
+      flex: 1;
+      height: 48px;
+      background: #fff;
+      border: 1px solid #E7EEFC;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      color: #909090;
+      letter-spacing: 0.25px;
+      outline: none;
+      font-family: inherit;
+    }
+    .phone-input::placeholder { color: #909090; }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      background: #CCC;
+      color: #909090;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.25px;
+      line-height: 28px;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 16px;
+      cursor: not-allowed;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-submit.active {
+      background: #0D57E2;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* ── Country dropdown ── */
+    .country-dropdown {
+      position: absolute;
+      top: 422px;   /* below phone-row (~351 + label + gap + row) */
+      left: 16px;
+      width: 220px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      z-index: 100;
+      overflow: hidden;
+      display: none;
+    }
+    .country-dropdown.open { display: block; }
+    .country-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #4F4F4F;
+      letter-spacing: 0.25px;
+    }
+    .country-option:not(:last-child) {
+      border-bottom: 1px solid #F5F5F5;
+    }
+    .country-option:active { background: #F0F2F5; }
+    .country-option-flag { font-size: 18px; line-height: 1; }
+    .country-option-name { flex: 1; }
+    .country-option-dial { color: #909090; }
+
+    /* ── Or divider ── */
+    .or-row {
+      display: flex;
+      align-items: center;
+      gap: 19px;
+    }
+    .or-line {
+      flex: 1;
+      height: 1px;
+      background: #E0E0E0;
+    }
+    .or-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #909090;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+
+    /* ── Social login ── */
+    .social-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .social-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #909090;
+      letter-spacing: 0.25px;
+    }
+    .social-buttons {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .btn-google {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+    .btn-apple {
+      width: 44px;
+      height: 44px;
+      border-radius: 24px;
+      background: #1E1E1E;
+      box-shadow: 0 0 2px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+
+    /* ── "I want to explore first" link ── */
+    .explore-link {
+      position: absolute;
+      top: 797px;
+      left: 50%;
+      translate: -50% 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0D57E2;
+      text-decoration: underline;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Blue top container -->
+  <div class="top-container">
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons">
+        <img src="images/figma/icon-cellular.svg" width="19" height="12" alt="" />
+        <img src="images/figma/icon-wifi.svg"     width="17" height="12" alt="" />
+        <img src="images/figma/icon-battery.svg"  width="27" height="13" alt="" />
+      </div>
+    </div>
+
+    <!-- Back button -->
+    <button class="btn-back" onclick="history.back()">
+      <svg viewBox="0 0 20 20" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.5 16L7 10L12.5 4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- Log in title -->
+    <span class="header-title">Log in</span>
+
+  </div>
+
+  <!-- Mascot -->
+  <div class="mascot">
+    <img src="images/figma/login-mascot.png" alt="muvmi mascot" />
+  </div>
+
+  <!-- Welcome title -->
+  <p class="welcome-title">Welcome to MuvMi</p>
+
+  <!-- Login form -->
+  <div class="login-form">
+
+    <div class="input-section">
+      <p class="input-label">Enter your mobile number</p>
+
+      <div class="phone-row">
+        <!-- Country code -->
+        <div class="country-code" id="country-code" onclick="toggleDropdown()">
+          <span class="country-flag" id="selected-flag">🇹🇭</span>
+          <span class="country-dial" id="selected-dial">+66</span>
+          <!-- Chevron down -->
+          <svg class="country-chevron" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 3.5L5 6.5L8 3.5" stroke="#4F4F4F" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <input class="phone-input" id="phone-input" type="tel" placeholder="eg. 0812345678" oninput="onPhoneInput()" />
+      </div>
+
+      <button class="btn-submit" id="btn-submit" disabled onclick="if(!this.disabled) window.location.href='travel-pass.html?redeem=1'">Submit</button>
+    </div>
+
+    <!-- Or divider -->
+    <div class="or-row">
+      <div class="or-line"></div>
+      <span class="or-text">Or</span>
+      <div class="or-line"></div>
+    </div>
+
+    <!-- Social login -->
+    <div class="social-section">
+      <p class="social-label">Continue with</p>
+      <div class="social-buttons">
+        <!-- Google -->
+        <button class="btn-google" aria-label="Continue with Google" onclick="window.location.href='travel-pass.html?redeem=1'">
+          <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        </button>
+        <!-- Apple -->
+        <button class="btn-apple" aria-label="Continue with Apple" onclick="window.location.href='travel-pass.html?redeem=1'">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.13 14.9c-.03-2.89 2.36-4.29 2.47-4.36-1.35-1.97-3.44-2.24-4.19-2.27-1.78-.18-3.48 1.05-4.39 1.05-.91 0-2.31-1.03-3.8-1-1.96.03-3.77 1.14-4.78 2.89-2.04 3.53-.52 8.76 1.46 11.62.97 1.41 2.12 2.98 3.63 2.92 1.46-.06 2.01-.94 3.78-.94 1.77 0 2.27.94 3.82.91 1.57-.03 2.56-1.43 3.52-2.85.71-1.01 1.21-2.15 1.48-3.35-3.36-1.27-3.49-5.58-.6-6.62zM17.26 6.77c.81-.98 1.35-2.34 1.2-3.7-1.16.05-2.56.77-3.39 1.74-.74.85-1.39 2.22-1.22 3.53 1.3.1 2.62-.66 3.41-1.57z" fill="#fff"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Explore first link -->
+  <a class="explore-link" href="index.html">I want to explore first</a>
+
+  <!-- Country dropdown -->
+  <div class="country-dropdown" id="country-dropdown">
+    <div class="country-option" onclick="selectCountry('🇹🇭','Thailand','+66')">
+      <span class="country-option-flag">🇹🇭</span>
+      <span class="country-option-name">Thailand</span>
+      <span class="country-option-dial">+66</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇺🇸','United States','+1')">
+      <span class="country-option-flag">🇺🇸</span>
+      <span class="country-option-name">United States</span>
+      <span class="country-option-dial">+1</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇬🇧','United Kingdom','+44')">
+      <span class="country-option-flag">🇬🇧</span>
+      <span class="country-option-name">United Kingdom</span>
+      <span class="country-option-dial">+44</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇸🇬','Singapore','+65')">
+      <span class="country-option-flag">🇸🇬</span>
+      <span class="country-option-name">Singapore</span>
+      <span class="country-option-dial">+65</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇯🇵','Japan','+81')">
+      <span class="country-option-flag">🇯🇵</span>
+      <span class="country-option-name">Japan</span>
+      <span class="country-option-dial">+81</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇨🇳','China','+86')">
+      <span class="country-option-flag">🇨🇳</span>
+      <span class="country-option-name">China</span>
+      <span class="country-option-dial">+86</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇰🇷','South Korea','+82')">
+      <span class="country-option-flag">🇰🇷</span>
+      <span class="country-option-name">South Korea</span>
+      <span class="country-option-dial">+82</span>
+    </div>
+    <div class="country-option" onclick="selectCountry('🇦🇺','Australia','+61')">
+      <span class="country-option-flag">🇦🇺</span>
+      <span class="country-option-name">Australia</span>
+      <span class="country-option-dial">+61</span>
+    </div>
+  </div>
+
+</div>
+<script>
+  function toggleDropdown() {
+    document.getElementById('country-dropdown').classList.toggle('open');
+  }
+
+  function selectCountry(flag, name, dial) {
+    document.getElementById('selected-flag').textContent = flag;
+    document.getElementById('selected-dial').textContent = dial;
+    document.getElementById('country-dropdown').classList.remove('open');
+  }
+
+  function onPhoneInput() {
+    const val = document.getElementById('phone-input').value.trim();
+    const btn = document.getElementById('btn-submit');
+    if (val.length > 0) {
+      btn.classList.add('active');
+      btn.disabled = false;
+    } else {
+      btn.classList.remove('active');
+      btn.disabled = true;
+    }
+  }
+
+  // Close dropdown when clicking outside
+  document.querySelector('.phone').addEventListener('click', function(e) {
+    if (!e.target.closest('#country-code') && !e.target.closest('#country-dropdown')) {
+      document.getElementById('country-dropdown').classList.remove('open');
+    }
+  });
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');
+</script>
+</body>
+</html>

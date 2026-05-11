@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393px, initial-scale=1.0" />
+  <title>How are you traveling — muvmi</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dynamic Island notch */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 200;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50px;
+      background: #fff;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 20px 6px;
+      z-index: 10;
+    }
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4F4F4F;
+      letter-spacing: -0.2px;
+    }
+    .status-icons {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── Illustration (mascot, top-left, cropped at screen edge) ── */
+    .illustration {
+      position: absolute;
+      top: 18px;
+      left: 0;
+      width: 128px;
+      height: 189px;
+      pointer-events: none;
+    }
+    .illustration img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: left center;
+    }
+
+    /* ── Title ── */
+    .title {
+      position: absolute;
+      top: 177px;
+      left: 50%;
+      translate: -50% 0;
+      width: 255px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 36px;
+      color: #4F4F4F;
+      text-align: center;
+      letter-spacing: 0.25px;
+      background: #fff;
+      padding: 0 4px;
+    }
+
+    /* ── Mode cards shared ── */
+    .mode-card {
+      position: absolute;
+      left: 16px;
+      width: 361px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      text-decoration: none;
+      display: block;
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+
+    .card-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      gap: 8px;
+    }
+
+    /* ── Card icon container (48×48, blue bg) ── */
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: #E7EEFC;
+      border-radius: 9.6px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Card text ── */
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+    .card-text {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card-name {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+      color: #4F4F4F;
+      letter-spacing: 0.25px;
+    }
+    .card-desc {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      color: #909090;
+      letter-spacing: 0.25px;
+      margin-top: -4px;
+    }
+    .card-tags {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 18px;
+      color: #0D57E2;
+      letter-spacing: 0.25px;
+    }
+
+    /* ── Daily Ride card ── */
+    .card-daily { top: 281px; }
+
+    /* ── All-Day Pass wrapper (includes floating badge) ── */
+    .card-tourist-wrap {
+      position: absolute;
+      top: 433px;
+      left: 16px;
+      width: 361px;
+      height: 195px;
+    }
+
+    .card-alldaypass {
+      position: absolute;
+      top: 11px;
+      left: 0;
+      width: 361px;
+      height: 183px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.15);
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      transition: box-shadow 0.15s;
+    }
+    .card-alldaypass .card-inner {
+      padding: 26px 16px 16px;
+    }
+
+    /* ── "Tourist love this!" badge ── */
+    .badge-tourist {
+      position: absolute;
+      top: -1px;
+      left: 15px;
+      background: #F05555;
+      border-radius: 24px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.15);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .badge-tourist span {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+      color: #FFF7E9;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+
+    /* ── All-Day Pass bottom footer ── */
+    .card-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #E7EEFC;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 0 0 16px 16px;
+    }
+    .card-footer-text {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 18px;
+      color: #000;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+    .btn-redeem {
+      background: #0D57E2;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 18px;
+      letter-spacing: 0.25px;
+      border: none;
+      border-radius: 24px;
+      padding: 4px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ── Footer hint ── */
+    .footer-hint {
+      position: absolute;
+      top: 652px;
+      left: 50%;
+      translate: -50% 0;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      color: #909090;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <img src="images/figma/icon-cellular.svg" width="19" height="12" alt="" />
+      <img src="images/figma/icon-wifi.svg"     width="17" height="12" alt="" />
+      <img src="images/figma/icon-battery.svg"  width="27" height="13" alt="" />
+    </div>
+  </div>
+
+  <!-- Illustration (mascot — export SVG from Figma node 1316:3361 to replace) -->
+  <div class="illustration">
+    <img src="images/figma/prehome-mascot.png" alt="" />
+  </div>
+
+  <!-- Title -->
+  <h1 class="title">How are you traveling today?</h1>
+
+  <!-- ── Daily Ride card ── -->
+  <div class="mode-card card-daily">
+    <div class="card-inner">
+      <div class="card-left">
+
+        <!-- Daily Ride icon -->
+        <div class="card-icon">
+          <img src="images/figma/prehome-icon-daily-ride.png" width="48" height="48" style="width:100%;height:100%;object-fit:contain;" alt="Daily Ride icon" />
+        </div>
+
+        <div class="card-text">
+          <div>
+            <div class="card-name">Daily Ride</div>
+            <div class="card-desc">Best for daily life and getting around</div>
+          </div>
+          <div class="card-tags">Safe • Affordable • Connected</div>
+        </div>
+      </div>
+
+      <!-- Chevron right -->
+      <img src="images/figma/prehome-icon-chevron-right.png" width="16" height="16" style="flex-shrink:0;" alt="" />
+    </div>
+  </div>
+
+  <!-- ── All-Day Pass card + badge ── -->
+  <div class="card-tourist-wrap">
+
+    <!-- Floating badge -->
+    <div class="badge-tourist">
+      <span>Tourist love this!</span>
+      <!-- Binoculars icon -->
+      <img src="images/figma/prehome-icon-binoculars.png" width="20" height="20" alt="" />
+    </div>
+
+    <div class="card-alldaypass" onclick="window.location.href='pass-benefits.html'" style="cursor:pointer;">
+      <div class="card-inner">
+        <div class="card-left">
+
+          <!-- All-Day Pass icon -->
+          <div class="card-icon">
+            <img src="images/figma/prehome-icon-alldaypass.png" width="48" height="48" style="width:100%;height:100%;object-fit:contain;" alt="All-Day Pass icon" />
+          </div>
+
+          <div class="card-text">
+            <div>
+              <div class="card-name">All-Day Pass</div>
+              <div class="card-desc">Visit multiple places in one day</div>
+            </div>
+            <div class="card-tags">Unlimited rides • Private trips • Full Support</div>
+          </div>
+        </div>
+
+        <!-- Chevron right -->
+        <img src="images/figma/prehome-icon-chevron-right.png" width="16" height="16" style="flex-shrink:0;" alt="" />
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="card-footer">
+        <span class="card-footer-text">Already got a pass from website?</span>
+        <button class="btn-redeem" onclick="event.stopPropagation(); window.location.href='login.html'">REDEEM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer hint -->
+  <p class="footer-hint">You can switch mode anytimes</p>
+
+</div>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>

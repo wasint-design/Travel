@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393px, initial-scale=1.0" />
+  <title>Waiting — muvmi</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #E8EEF4;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 200;
+    }
+
+    /* Map fills above the bottom panel */
+    #map {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      bottom: 216px;
+      z-index: 0;
+    }
+
+    /* Top gradient for status bar legibility */
+    .map-top-fade {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 120px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 44px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Bottom waiting panel ── */
+    .waiting-panel {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 216px;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Drag handle chevron */
+    .drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Info section */
+    .info-section {
+      padding: 8px 16px 0;
+      flex-shrink: 0;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .info-heading {
+      font-size: 14px;
+      font-weight: 500;
+      color: #4F4F4F;
+      letter-spacing: 0.25px;
+    }
+    .info-eta {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FF7A00;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+    .info-dest {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .info-dest-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    /* Driver section */
+    .driver-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 0;
+      flex-shrink: 0;
+    }
+    .driver-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .driver-type-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .driver-type-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #909090;
+      letter-spacing: 0.25px;
+    }
+    .driver-plate {
+      font-size: 16px;
+      font-weight: 600;
+      color: #4F4F4F;
+      letter-spacing: 0.25px;
+    }
+    .chat-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #E7EEFC;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .chat-dot {
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 11px; height: 11px;
+      background: #F05555;
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+
+    /* Scan button */
+    .scan-btn {
+      margin: 10px 16px 0;
+      height: 46px;
+      background: #0D57E2;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Home indicator */
+    .home-indicator {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 8px;
+    }
+    .home-indicator-bar {
+      width: 130px; height: 5px;
+      background: #1a1a1a;
+      border-radius: 100px;
+    }
+
+    /* Leaflet overrides */
+    .leaflet-control-zoom,
+    .leaflet-control-attribution { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <div id="map"></div>
+  <div class="map-top-fade"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0"    y="7"   width="3" height="5"    rx="1" fill="#1a1a1a"/>
+        <rect x="4.5"  y="4.5" width="3" height="7.5"  rx="1" fill="#1a1a1a"/>
+        <rect x="9"    y="2"   width="3" height="10"   rx="1" fill="#1a1a1a"/>
+        <rect x="13.5" y="0"   width="3" height="12"   rx="1" fill="#1a1a1a" opacity="0.35"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#1a1a1a"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#1a1a1a"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#1a1a1a"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#1a1a1a" stroke-opacity="0.35"/>
+        <rect x="2"   y="2"   width="15" height="8"  rx="2"   fill="#1a1a1a"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#1a1a1a" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Waiting Panel -->
+  <div class="waiting-panel">
+
+    <!-- Drag handle -->
+    <div class="drag-handle">
+      <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+        <path d="M2 10L10 2L18 10" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Info -->
+    <div class="info-section">
+      <div class="info-row">
+        <span class="info-heading">กำลังไปรับคุณ</span>
+        <span class="info-eta">11-13 นาที</span>
+      </div>
+      <div class="info-dest">
+        <svg width="14" height="17" viewBox="0 0 14 17" fill="none">
+          <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 10 7 10s7-4.75 7-10C14 3.13 10.87 0 7 0zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="#0D57E2"/>
+        </svg>
+        <span class="info-dest-text" id="dest-text">—</span>
+      </div>
+    </div>
+
+    <!-- Driver -->
+    <div class="driver-section">
+      <div class="driver-left">
+        <div class="driver-type-row">
+          <!-- TukTuk icon -->
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="4" fill="#F0F2F5"/>
+            <path d="M6 22h20v2H6v-2z" fill="#4F4F4F"/>
+            <path d="M8 14h16l2 8H6l2-8z" fill="#909090"/>
+            <path d="M10 14l2-6h8l2 6H10z" fill="#4F4F4F"/>
+            <circle cx="10" cy="23" r="2.5" fill="#1a1a1a"/>
+            <circle cx="22" cy="23" r="2.5" fill="#1a1a1a"/>
+            <rect x="12" y="10" width="8" height="5" rx="1" fill="#A8C8F8"/>
+          </svg>
+          <span class="driver-type-label">TukTuk</span>
+        </div>
+        <span class="driver-plate">สก5919</span>
+      </div>
+
+      <!-- Chat button -->
+      <button class="chat-btn" aria-label="Chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#0D57E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="chat-dot"></div>
+      </button>
+    </div>
+
+    <!-- Scan button -->
+    <button class="scan-btn" onclick="window.location.href='index.html'">
+      สแกน
+      <!-- QR icon -->
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="7" height="7" rx="1" stroke="white" stroke-width="2"/>
+        <rect x="14" y="3" width="7" height="7" rx="1" stroke="white" stroke-width="2"/>
+        <rect x="3" y="14" width="7" height="7" rx="1" stroke="white" stroke-width="2"/>
+        <rect x="5" y="5" width="3" height="3" fill="white"/>
+        <rect x="16" y="5" width="3" height="3" fill="white"/>
+        <rect x="5" y="16" width="3" height="3" fill="white"/>
+        <path d="M14 14h2v2h-2zM18 14h3M14 18v3M18 18h3v3h-3zM18 16v1" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Home indicator -->
+    <div class="home-indicator">
+      <div class="home-indicator-bar"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const DEFAULT_PICKUP_LAT = 13.7462;
+  const DEFAULT_PICKUP_LNG = 100.5347;
+
+  // Show dropoff name
+  const dropoff = localStorage.getItem('booking_dropoff') || '';
+  document.getElementById('dest-text').textContent = dropoff || '—';
+
+  // Map
+  const map = L.map('map', {
+    zoomControl: false,
+    attributionControl: false,
+    dragging: true,
+    scrollWheelZoom: true,
+  }).setView([13.7563, 100.5018], 13);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Marker icons
+  function makePickupIcon() {
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:18px;height:18px;border-radius:50%;border:3px solid #0D57E2;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);"></div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+  }
+
+  function makeDropoffIcon() {
+    return L.divIcon({
+      className: '',
+      html: `
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="width:18px;height:18px;border-radius:50%;background:#0D57E2;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(13,87,226,0.4);"></div>
+          <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #0D57E2;margin-top:-1px;"></div>
+        </div>`,
+      iconSize: [18, 25],
+      iconAnchor: [9, 25],
+    });
+  }
+
+  function makeTukTukIcon() {
+    return L.divIcon({
+      className: '',
+      html: `<img src="images/figma/tuktuk-on-map.svg" width="32" height="48" style="display:block;" />`,
+      iconSize: [32, 48],
+      iconAnchor: [16, 44],
+    });
+  }
+
+  const pickupLat  = parseFloat(localStorage.getItem('booking_pickup_lat'))  || DEFAULT_PICKUP_LAT;
+  const pickupLng  = parseFloat(localStorage.getItem('booking_pickup_lng'))  || DEFAULT_PICKUP_LNG;
+  const dropoffLat = parseFloat(localStorage.getItem('booking_dropoff_lat')) || 0;
+  const dropoffLng = parseFloat(localStorage.getItem('booking_dropoff_lng')) || 0;
+
+  const puCoords = [pickupLat, pickupLng];
+  L.marker(puCoords, { icon: makePickupIcon() }).addTo(map);
+
+  const bounds = [puCoords];
+
+  if (dropoffLat && dropoffLng) {
+    const doCoords = [dropoffLat, dropoffLng];
+    L.marker(doCoords, { icon: makeDropoffIcon() }).addTo(map);
+    bounds.push(doCoords);
+
+    // TukTuk somewhere between pickup and dropoff (midpoint, slightly offset)
+    const midLat = (pickupLat + dropoffLat) / 2 + 0.002;
+    const midLng = (pickupLng + dropoffLng) / 2;
+    L.marker([midLat, midLng], { icon: makeTukTukIcon() }).addTo(map);
+  }
+
+  map.fitBounds(bounds, { padding: [80, 80] });
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>

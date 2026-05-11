@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393px, initial-scale=1.0" />
+  <title>Select destination — muvmi</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 200;
+    }
+
+    /* ── Status Bar (dark on white) ── */
+    .status-bar {
+      height: 50px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 8px;
+      background: #fff;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      letter-spacing: -0.2px;
+    }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Search Header ── */
+    .search-header {
+      background: #fff;
+      padding: 8px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #EBEBEB;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .search-field {
+      flex: 1;
+      min-width: 0;
+      font-size: 16px;
+      font-weight: 400;
+      color: #909090;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: text;
+      user-select: none;
+    }
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #0D57E2;
+      border-radius: 99px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .lang-btn {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.25px;
+      line-height: 20px;
+    }
+    .lang-btn.active   { background: #0D57E2; color: #fff; }
+    .lang-btn.inactive { background: transparent; color: #0D57E2; }
+
+    /* ── Category filter chips ── */
+    .category-filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 8px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      border-bottom: 1px solid #F0F2F5;
+    }
+    .category-filter-row::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1.5px solid #E0E0E0;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4F4F4F;
+      cursor: pointer;
+      white-space: nowrap;
+      letter-spacing: 0.25px;
+      flex-shrink: 0;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .cat-chip.active {
+      border-color: #0D57E2;
+      background: #E7EEFC;
+      color: #0D57E2;
+    }
+
+    /* ── Location List ── */
+    .location-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+      min-height: 0;
+    }
+    .location-list::-webkit-scrollbar { display: none; }
+
+    .location-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #F0F2F5;
+      cursor: pointer;
+      user-select: none;
+    }
+    .location-item:last-child { border-bottom: none; }
+
+    /* Map thumbnail */
+    .location-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      background: #E4ECF3;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Map grid lines */
+    .location-thumb::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(#C5D5E4 1px, transparent 1px),
+        linear-gradient(90deg, #C5D5E4 1px, transparent 1px);
+      background-size: 9px 9px;
+    }
+    /* Road lines */
+    .location-thumb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, #DAE6F0 3px, transparent 3px),
+        linear-gradient(#DAE6F0 3px, transparent 3px);
+      background-size: 26px 26px;
+      background-position: 10px 14px;
+    }
+    .thumb-icon {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Location info */
+    .location-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .location-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a1a;
+      line-height: 22px;
+      letter-spacing: 0.25px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .location-dist {
+      font-size: 13px;
+      font-weight: 400;
+      color: #909090;
+      letter-spacing: 0.25px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-width: 42px;
+      text-align: right;
+    }
+
+    /* ── Home Indicator ── */
+    .home-indicator {
+      height: 34px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-indicator-bar { width: 130px; height: 5px; background: #1a1a1a; border-radius: 100px; }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <!-- Cellular -->
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0"    y="7"   width="3" height="5"    rx="1" fill="#1a1a1a"/>
+        <rect x="4.5"  y="4.5" width="3" height="7.5"  rx="1" fill="#1a1a1a"/>
+        <rect x="9"    y="2"   width="3" height="10"   rx="1" fill="#1a1a1a"/>
+        <rect x="13.5" y="0"   width="3" height="12"   rx="1" fill="#1a1a1a" opacity="0.35"/>
+      </svg>
+      <!-- Wifi -->
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#1a1a1a"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#1a1a1a"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#1a1a1a"/>
+      </svg>
+      <!-- Battery -->
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#1a1a1a" stroke-opacity="0.35"/>
+        <rect x="2"   y="2"   width="15" height="8"  rx="2"   fill="#1a1a1a"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#1a1a1a" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Search Header -->
+  <div class="search-header">
+    <button class="back-btn" onclick="history.back()" aria-label="Back">
+      <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+        <path d="M9 1L1 9L9 17" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span class="search-field" id="search-label">To ?</span>
+    <div class="lang-toggle">
+      <button class="lang-btn active">EN</button>
+      <button class="lang-btn inactive">ไทย</button>
+    </div>
+  </div>
+
+  <!-- Category Filter Chips -->
+  <div class="category-filter-row" id="cat-filter-row"></div>
+
+  <!-- Location List -->
+  <div class="location-list" id="location-list"></div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"><div class="home-indicator-bar"></div></div>
+
+</div>
+
+<script>
+  const LOCATIONS = [
+    { name: '[OFF15] S.L. Residence (Soi.Vibhavadi 5 Yaek 2)',                    dist: '7.1 km', type: 'muvmi', lat: 13.8848, lng: 100.5438, category: null },
+    { name: 'MeSpace self storage Bangsue',                                         dist: '7.2 km', type: 'pin',   lat: 13.8210, lng: 100.5248, category: null },
+    { name: 'Jatujak Market BTS side (Department of Land Transport footbridge)',    dist: '7.2 km', type: 'pin',   lat: 13.7995, lng: 100.5508, category: 'Landmark' },
+    { name: 'Chatuchak Weekend Market',                                             dist: '7.2 km', type: 'pin',   lat: 13.7998, lng: 100.5500, category: 'Mall' },
+    { name: '[OFF15] 337 Apartment (Soi.Phaholyothin 18/1)',                        dist: '7.3 km', type: 'muvmi', lat: 13.8155, lng: 100.5518, category: null },
+    { name: '[OFF15] Civil Aviation Training Center – Building A',                  dist: '7.3 km', type: 'muvmi', lat: 13.8160, lng: 100.5525, category: null },
+    { name: '[OFF15] Middle of Soi.CKR village (Soi.Phaholyothin 18/1 Yaek 1-3)', dist: '7.3 km', type: 'muvmi', lat: 13.8148, lng: 100.5512, category: null },
+    { name: '[OFF15] PP Group Thailand (Soi.Vibhavadi 5 Yaek 2)',                   dist: '7.3 km', type: 'muvmi', lat: 13.8845, lng: 100.5445, category: null },
+    { name: 'Central Juvenile and Family Court',                                    dist: '7.4 km', type: 'pin',   lat: 13.8040, lng: 100.5522, category: null },
+    { name: '[OFF15] Middle of Soi.Vibhavadi 5 Yaek 5',                            dist: '7.4 km', type: 'muvmi', lat: 13.8850, lng: 100.5452, category: null },
+    { name: 'Chatuchak Wintage Building (Red Zone, Soi Ratchadaphisek 32)',         dist: '7.4 km', type: 'muvmi', lat: 13.8012, lng: 100.5532, category: 'Activity' },
+    { name: 'Chatuchak Park Office of the Royal Development Projects Board',        dist: '7.5 km', type: 'pin',   lat: 13.8002, lng: 100.5518, category: 'Landmark' },
+    { name: 'Ladprao Intersection',                                                 dist: '7.5 km', type: 'pin',   lat: 13.8165, lng: 100.5628, category: 'Landmark' },
+    { name: '[OFF15] Lat Phrao 71 Intersection (Soi Ladprao 71)',                   dist: '7.6 km', type: 'muvmi', lat: 13.8003, lng: 100.5692, category: null },
+    { name: 'Mo Chit BTS Station',                                                  dist: '7.6 km', type: 'pin',   lat: 13.8027, lng: 100.5540, category: 'Landmark' },
+  ];
+
+  // muvmi tuk-tuk lightning bolt icon (orange)
+  const ICON_MUVMI = `<svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+    <circle cx="13" cy="13" r="13" fill="#FFEEE8"/>
+    <path d="M15 4.5L8.5 14h5.5L10 21.5l8-11H13L15 4.5z" fill="#F04E23"/>
+    <path d="M15 4.5L8.5 14h5.5L10 21.5l8-11H13L15 4.5z" fill="url(#lg)" opacity="0.6"/>
+    <defs>
+      <linearGradient id="lg" x1="13" y1="4" x2="13" y2="22" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#FFCC00"/>
+        <stop offset="1" stop-color="#F04E23"/>
+      </linearGradient>
+    </defs>
+  </svg>`;
+
+  // Blue location pin
+  const ICON_PIN = `<svg width="22" height="26" viewBox="0 0 22 26" fill="none">
+    <path d="M11 0C4.92 0 0 4.92 0 11c0 8.25 11 19.5 11 19.5S22 19.25 22 11C22 4.92 17.08 0 11 0zm0 15a4 4 0 110-8 4 4 0 010 8z" fill="#0D57E2"/>
+  </svg>`;
+
+  // Show label based on mode
+  const mode = localStorage.getItem('booking_mode') || 'dropoff';
+  document.getElementById('search-label').textContent = mode === 'pickup' ? 'From ?' : 'To ?';
+
+  // Category filter
+  const CATEGORIES = [
+    { key: 'all',        label: 'All' },
+    { key: 'Landmark',   label: 'Sightseeing' },
+    { key: 'Restaurant', label: 'Restaurant' },
+    { key: 'Cafe',       label: 'Cafe' },
+    { key: 'Mall',       label: 'Mall' },
+    { key: 'Activity',   label: 'Activity' },
+  ];
+
+  let activeCategory = localStorage.getItem('booking_category') || 'all';
+
+  // Render filter chips
+  const filterRow = document.getElementById('cat-filter-row');
+  CATEGORIES.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'cat-chip' + (activeCategory === cat.key ? ' active' : '');
+    chip.textContent = cat.label;
+    chip.addEventListener('click', () => {
+      activeCategory = cat.key;
+      localStorage.setItem('booking_category', cat.key);
+      filterRow.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderList();
+    });
+    filterRow.appendChild(chip);
+  });
+
+  function selectLocation(name, lat, lng) {
+    if (mode === 'pickup') {
+      localStorage.setItem('booking_pickup', name);
+      localStorage.setItem('booking_pickup_lat', lat);
+      localStorage.setItem('booking_pickup_lng', lng);
+    } else {
+      localStorage.setItem('booking_dropoff', name);
+      localStorage.setItem('booking_dropoff_lat', lat);
+      localStorage.setItem('booking_dropoff_lng', lng);
+    }
+    window.location.href = 'booking.html';
+  }
+
+  function renderList() {
+    const list = document.getElementById('location-list');
+    list.innerHTML = '';
+    const filtered = activeCategory === 'all'
+      ? LOCATIONS
+      : LOCATIONS.filter(loc => loc.category === activeCategory);
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div style="padding:32px 16px;text-align:center;color:#909090;font-size:14px;">No locations in this category</div>`;
+      return;
+    }
+
+    filtered.forEach(loc => {
+      const item = document.createElement('div');
+      item.className = 'location-item';
+      item.innerHTML = `
+        <div class="location-thumb">
+          <span class="thumb-icon">${loc.type === 'muvmi' ? ICON_MUVMI : ICON_PIN}</span>
+        </div>
+        <div class="location-info">
+          <span class="location-name">${loc.name}</span>
+        </div>
+        <span class="location-dist">${loc.dist}</span>
+      `;
+      item.addEventListener('click', () => selectLocation(loc.name, loc.lat, loc.lng));
+      list.appendChild(item);
+    });
+  }
+
+  renderList();
+
+  // Drag-to-scroll (vertical)
+  function makeDraggable(el, { vertical = false } = {}) {
+    let isDown = false, axis = null, startX, startY, scrollLeft, scrollTop;
+    let velX = 0, velY = 0, lastX = 0, lastY = 0, lastT = 0, rafId = null;
+    const AXIS_THRESHOLD = 5;
+    el.style.cursor = 'grab'; el.style.userSelect = 'none';
+    function cancelMomentum() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+    function applyMomentum() {
+      if (axis === 'x') { velX *= 0.92; el.scrollLeft += velX; if (Math.abs(velX) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      else if (axis === 'y') { velY *= 0.92; el.scrollTop += velY; if (Math.abs(velY) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      rafId = null;
+    }
+    el.addEventListener('mousedown', e => {
+      if (e.target.closest('button, a, input, [role="button"]')) return;
+      cancelMomentum(); isDown = true; axis = null; el.style.cursor = 'grabbing';
+      startX = e.pageX; startY = e.pageY; scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+      lastX = e.pageX; lastY = e.pageY; lastT = performance.now(); velX = 0; velY = 0;
+    });
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      const dx = e.pageX - startX, dy = e.pageY - startY;
+      if (!axis) {
+        if (Math.abs(dx) > AXIS_THRESHOLD || Math.abs(dy) > AXIS_THRESHOLD)
+          axis = (!vertical || Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+        else return;
+      }
+      e.preventDefault();
+      const now = performance.now(), dt = now - lastT || 1;
+      if (axis === 'x') { velX = (lastX - e.pageX) / dt * 12; el.scrollLeft = scrollLeft - dx; }
+      else              { velY = (lastY - e.pageY) / dt * 12; el.scrollTop  = scrollTop  - dy; }
+      lastX = e.pageX; lastY = e.pageY; lastT = now;
+    });
+    const release = () => {
+      if (!isDown) return; isDown = false; el.style.cursor = 'grab';
+      if (axis !== null) el.addEventListener('click', e => e.stopPropagation(), { capture: true, once: true });
+      rafId = requestAnimationFrame(applyMomentum);
+    };
+    el.addEventListener('mouseup',    release);
+    el.addEventListener('mouseleave', release);
+  }
+
+  makeDraggable(document.getElementById('location-list'), { vertical: true });
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>

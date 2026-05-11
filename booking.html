@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393px, initial-scale=1.0" />
+  <title>Request ride — muvmi</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone frame (everything absolutely positioned) ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #E8EEF4;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 200;
+    }
+
+    /* ── Leaflet map fills phone above booking panel ── */
+    #map {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      bottom: 222px;
+      z-index: 0;
+    }
+
+    /* Subtle top gradient so status bar is readable */
+    .map-top-fade {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 130px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 100%);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+
+    /* ── muvmi circle icon ── */
+    .muvmi-icon {
+      position: absolute;
+      left: 16px; top: 58px;
+      width: 44px; height: 44px;
+      z-index: 10; cursor: pointer;
+    }
+
+    /* ── BKK Value pass pill ── */
+    .pass-pill {
+      position: absolute;
+      left: 68px; top: 60px;
+      width: 309px; height: 40px;
+      background: #fff;
+      border-radius: 999px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      display: flex; align-items: center;
+      padding: 0 14px 0 12px;
+      gap: 8px;
+      z-index: 10; cursor: pointer;
+    }
+    .pass-pill-text {
+      flex: 1;
+      font-size: 16px; font-weight: 600;
+      color: #0D57E2; letter-spacing: 0.25px;
+      white-space: nowrap;
+    }
+
+    /* ── White booking panel ── */
+    .booking-panel {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 222px;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+
+    /* Route connector */
+    .route-connector {
+      position: absolute;
+      left: 24px; top: 29px;
+      width: 16px; height: 74px;
+    }
+    .dot-pickup {
+      position: absolute; top: 0;
+      width: 16px; height: 16px;
+      border: 3px solid #0D57E2;
+      border-radius: 50%; background: #fff;
+    }
+    .dot-dropoff {
+      position: absolute; top: 58px;
+      width: 16px; height: 16px;
+      background: #0D57E2; border: 2px solid #0D57E2;
+      border-radius: 50%;
+    }
+    .connector-arrow {
+      position: absolute;
+      left: -4px; top: 24px;
+      width: 24px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Route inputs */
+    .route-input {
+      position: absolute;
+      left: 55px; width: 281px; height: 42px;
+      border: 1px solid #909090; border-radius: 12px;
+      display: flex; align-items: center;
+      padding: 0 14px;
+      cursor: pointer; overflow: hidden;
+    }
+    .route-input.pickup  { top: 16px; }
+    .route-input.dropoff { top: 74px; }
+    .input-text {
+      font-size: 16px; font-weight: 500; color: #4F4F4F;
+      letter-spacing: 0.25px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+      pointer-events: none;
+    }
+    .input-placeholder {
+      font-size: 16px; font-weight: 400; color: #C0C0C0;
+      letter-spacing: 0.25px; pointer-events: none;
+    }
+
+    /* Swap button */
+    .swap-btn {
+      position: absolute;
+      left: 345px; top: 54px;
+      width: 24px; height: 24px;
+      background: none; border: none; cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Start Trip button */
+    .start-trip-btn {
+      position: absolute;
+      left: 16px; right: 16px; top: 134px; height: 44px;
+      background: #0D57E2; color: #fff;
+      border: none; border-radius: 999px;
+      font-size: 18px; font-weight: 600;
+      cursor: pointer; font-family: inherit; letter-spacing: 0.25px;
+    }
+    .start-trip-btn:disabled {
+      background: #C0C0C0; cursor: not-allowed;
+    }
+
+    /* Home indicator */
+    .home-indicator {
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 34px;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 11;
+    }
+    .home-indicator-bar { width: 130px; height: 5px; background: #1a1a1a; border-radius: 100px; }
+
+    /* Hide Leaflet attribution / zoom controls */
+    .leaflet-control-zoom,
+    .leaflet-control-attribution { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Map -->
+  <div id="map"></div>
+  <div class="map-top-fade"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0"    y="7"   width="3" height="5"    rx="1" fill="#1a1a1a"/>
+        <rect x="4.5"  y="4.5" width="3" height="7.5"  rx="1" fill="#1a1a1a"/>
+        <rect x="9"    y="2"   width="3" height="10"   rx="1" fill="#1a1a1a"/>
+        <rect x="13.5" y="0"   width="3" height="12"   rx="1" fill="#1a1a1a" opacity="0.35"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#1a1a1a"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#1a1a1a"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#1a1a1a"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#1a1a1a" stroke-opacity="0.35"/>
+        <rect x="2"   y="2"   width="15" height="8"  rx="2"   fill="#1a1a1a"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#1a1a1a" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- muvmi icon -->
+  <div class="muvmi-icon" onclick="window.location.href='index.html'" style="cursor:pointer;">
+    <img src="images/figma/muvmihead-circle.svg" width="44" height="44" alt="muvmi" />
+  </div>
+
+  <!-- BKK Value pill -->
+  <div class="pass-pill">
+    <img src="images/figma/icon-map-pin.svg" width="16" height="16" alt="" />
+    <span class="pass-pill-text">BKK Value</span>
+    <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+      <path d="M1 1l5 5-5 5" stroke="#0D57E2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Booking Panel -->
+  <div class="booking-panel">
+
+    <!-- Route connector -->
+    <div class="route-connector">
+      <div class="dot-pickup"></div>
+      <div class="connector-arrow">
+        <img src="images/figma/booking-arrow-down.svg" width="24" height="26" alt="" style="transform:rotate(180deg)" />
+      </div>
+      <div class="dot-dropoff"></div>
+    </div>
+
+    <!-- Pickup input -->
+    <div class="route-input pickup" id="pickup-input" onclick="goPickup()">
+      <span id="pickup-text" class="input-text">Siam Paragon</span>
+    </div>
+
+    <!-- Dropoff input -->
+    <div class="route-input dropoff" id="dropoff-input" onclick="goDropoff()">
+      <span id="dropoff-text" class="input-placeholder">To ?</span>
+    </div>
+
+    <!-- Swap button -->
+    <button class="swap-btn" onclick="swapLocations()" aria-label="Swap">
+      <img src="images/figma/booking-swap.svg" width="24" height="24" alt="Swap" />
+    </button>
+
+    <!-- Start Trip! -->
+    <button class="start-trip-btn" id="start-btn" onclick="startTrip()">Start Trip!</button>
+
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"><div class="home-indicator-bar"></div></div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const DEFAULT_PICKUP      = 'Siam Paragon';
+  const DEFAULT_PICKUP_LAT  = 13.7462;
+  const DEFAULT_PICKUP_LNG  = 100.5347;
+
+  // ── Leaflet map ──
+  const map = L.map('map', {
+    zoomControl: false,
+    attributionControl: false,
+    dragging: true,
+    scrollWheelZoom: true,
+  }).setView([13.7563, 100.5018], 13);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // ── Marker icons ──
+  function makePickupIcon() {
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        width:18px;height:18px;border-radius:50%;
+        border:3px solid #0D57E2;background:#fff;
+        box-shadow:0 2px 8px rgba(0,0,0,0.25);
+      "></div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+  }
+
+  function makeDropoffIcon() {
+    return L.divIcon({
+      className: '',
+      html: `
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="
+            width:18px;height:18px;border-radius:50%;
+            background:#0D57E2;border:2.5px solid #fff;
+            box-shadow:0 2px 8px rgba(13,87,226,0.4);
+          "></div>
+          <div style="
+            width:0;height:0;
+            border-left:5px solid transparent;
+            border-right:5px solid transparent;
+            border-top:7px solid #0D57E2;
+            margin-top:-1px;
+          "></div>
+        </div>`,
+      iconSize: [18, 25],
+      iconAnchor: [9, 25],
+    });
+  }
+
+  let pickupMarker  = null;
+  let dropoffMarker = null;
+
+  function updateMap(pickupLat, pickupLng, dropoffLat, dropoffLng) {
+    // Remove existing markers
+    if (pickupMarker)  { map.removeLayer(pickupMarker);  pickupMarker  = null; }
+    if (dropoffMarker) { map.removeLayer(dropoffMarker); dropoffMarker = null; }
+
+    const puCoords = [pickupLat, pickupLng];
+    pickupMarker = L.marker(puCoords, { icon: makePickupIcon() }).addTo(map);
+
+    if (dropoffLat && dropoffLng) {
+      const doCoords = [dropoffLat, dropoffLng];
+      dropoffMarker = L.marker(doCoords, { icon: makeDropoffIcon() }).addTo(map);
+      map.fitBounds([puCoords, doCoords], { padding: [80, 80] });
+    } else {
+      map.setView(puCoords, 14);
+    }
+  }
+
+  // ── Render UI + map ──
+  function render() {
+    const pickup     = localStorage.getItem('booking_pickup')      || DEFAULT_PICKUP;
+    const dropoff    = localStorage.getItem('booking_dropoff')     || '';
+    const pickupLat  = parseFloat(localStorage.getItem('booking_pickup_lat'))  || DEFAULT_PICKUP_LAT;
+    const pickupLng  = parseFloat(localStorage.getItem('booking_pickup_lng'))  || DEFAULT_PICKUP_LNG;
+    const dropoffLat = parseFloat(localStorage.getItem('booking_dropoff_lat')) || 0;
+    const dropoffLng = parseFloat(localStorage.getItem('booking_dropoff_lng')) || 0;
+
+    const puEl = document.getElementById('pickup-text');
+    puEl.textContent = pickup;
+    puEl.className   = 'input-text';
+
+    const doEl = document.getElementById('dropoff-text');
+    doEl.textContent = dropoff || 'To ?';
+    doEl.className   = dropoff ? 'input-text' : 'input-placeholder';
+
+    document.getElementById('start-btn').disabled = !dropoff;
+
+    updateMap(pickupLat, pickupLng, dropoff ? dropoffLat : 0, dropoff ? dropoffLng : 0);
+  }
+
+  function goPickup() {
+    localStorage.setItem('booking_mode', 'pickup');
+    window.location.href = 'requesting.html';
+  }
+
+  function goDropoff() {
+    localStorage.setItem('booking_mode', 'dropoff');
+    window.location.href = 'requesting.html';
+  }
+
+  function swapLocations() {
+    const pickup     = localStorage.getItem('booking_pickup')      || DEFAULT_PICKUP;
+    const dropoff    = localStorage.getItem('booking_dropoff')     || '';
+    const pickupLat  = localStorage.getItem('booking_pickup_lat')  || DEFAULT_PICKUP_LAT;
+    const pickupLng  = localStorage.getItem('booking_pickup_lng')  || DEFAULT_PICKUP_LNG;
+    const dropoffLat = localStorage.getItem('booking_dropoff_lat') || '';
+    const dropoffLng = localStorage.getItem('booking_dropoff_lng') || '';
+
+    localStorage.setItem('booking_pickup',     dropoff || DEFAULT_PICKUP);
+    localStorage.setItem('booking_pickup_lat', dropoffLat || DEFAULT_PICKUP_LAT);
+    localStorage.setItem('booking_pickup_lng', dropoffLng || DEFAULT_PICKUP_LNG);
+    localStorage.setItem('booking_dropoff',    pickup);
+    localStorage.setItem('booking_dropoff_lat', pickupLat);
+    localStorage.setItem('booking_dropoff_lng', pickupLng);
+    render();
+  }
+
+  function startTrip() {
+    window.location.href = 'waiting.html';
+  }
+
+  render();
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>
