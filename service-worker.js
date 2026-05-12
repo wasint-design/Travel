@@ -1,4 +1,4 @@
-const CACHE = 'tourist-planner-v2';
+const CACHE = 'tourist-planner-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
 
