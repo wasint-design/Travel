@@ -1489,6 +1489,23 @@
       return;
     }
 
+    // Request a ride → set drop-off and go to booking
+    const rideBtn = e.target.closest('.btn-ride');
+    if (rideBtn) {
+      const card = rideBtn.closest('.place-card');
+      if (card) {
+        const place = plannerPlaces[card.dataset.placeId] || {};
+        const coord = STOPS_COORD[card.dataset.placeId] || {};
+        currentPlaceData = {
+          name: place.name || card.querySelector('.place-name')?.textContent || '',
+          lat:  coord.lat || place.lat || 13.7500,
+          lng:  coord.lng || place.lng || 100.4930,
+        };
+        setDropoff();
+      }
+      return;
+    }
+
     // More info → open place overlay
     const moreBtn = e.target.closest('.btn-more');
     if (moreBtn) {
