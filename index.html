@@ -11,6 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="images/icon-192.png" />
   <link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <title>Home — muvmi Tourist</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -639,9 +641,6 @@
       padding: 2px 8px; font-size: 12px; color: #4F4F4F; line-height: 18px; white-space: nowrap;
     }
     .sheet-stop-tag.green { background: #E7FCED; }
-    .sheet-stop-item.unchecked .sheet-stop-name { color: #C0C0C0; }
-    .sheet-stop-item.already-added { opacity: 0.45; pointer-events: none; }
-    .sheet-stop-item.already-added .sheet-stop-name { color: #909090; }
     .badge-added {
       flex-shrink: 0; background: #E7EEFC; color: #0D57E2;
       border-radius: 8px; padding: 2px 8px;
@@ -745,6 +744,191 @@
       height: 5px;
       background: #1a1a1a;
       border-radius: 100px;
+    }
+
+    /* ── Remove-from-planner confirm sheet ── */
+    .remove-confirm-overlay {
+      display: none;
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 55;
+      align-items: flex-end;
+      border-radius: inherit;
+    }
+    .remove-confirm-overlay.visible { display: flex; }
+    .remove-confirm-sheet {
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      padding: 24px 16px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .remove-confirm-overlay.visible .remove-confirm-sheet { transform: translateY(0); }
+    .remove-confirm-header { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .remove-confirm-title { font-size: 16px; font-weight: 600; color: #0D57E2; line-height: 24px; letter-spacing: 0.25px; }
+    .remove-confirm-subtitle { font-size: 14px; font-weight: 600; color: #4F4F4F; line-height: 22px; letter-spacing: 0.25px; }
+    .remove-confirm-preview { width: 100%; }
+    .remove-confirm-preview .delete-preview-card {
+      display: flex; align-items: center; gap: 8px;
+      padding: 16px; border: 1px solid #E7EEFC; border-radius: 16px; min-height: 80px;
+    }
+    .remove-confirm-preview .delete-preview-thumb {
+      width: 48px; height: 48px; border-radius: 9px; object-fit: cover; flex-shrink: 0; background: #EEE;
+    }
+    .remove-confirm-preview .delete-preview-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .remove-confirm-preview .delete-preview-name {
+      font-size: 14px; font-weight: 600; color: #4F4F4F; line-height: 22px;
+      letter-spacing: 0.25px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .remove-confirm-preview .delete-preview-meta { display: flex; align-items: center; gap: 8px; }
+    .remove-confirm-preview .delete-preview-dist { font-size: 12px; color: #939598; line-height: 18px; flex-shrink: 0; }
+    .remove-confirm-preview .delete-preview-tag {
+      padding: 2px 8px; border-radius: 8px; font-size: 12px; line-height: 18px;
+      background: #E7EEFC; color: #4F4F4F; white-space: nowrap;
+    }
+    .remove-confirm-buttons { display: flex; flex-direction: column; gap: 16px; }
+    .btn-remove-confirm {
+      width: 100%; background: #F05555; color: #fff;
+      border: 1px solid #F05555; border-radius: 24px; padding: 8px 16px;
+      font-size: 18px; font-weight: 600; line-height: 28px; letter-spacing: 0.25px;
+      cursor: pointer; font-family: inherit; transition: opacity .15s;
+    }
+    .btn-remove-confirm:hover { opacity: 0.85; }
+    .btn-remove-cancel {
+      width: 100%; background: #fff; color: #0D57E2;
+      border: 1px solid #0D57E2; border-radius: 24px; padding: 8px 16px;
+      font-size: 18px; font-weight: 600; line-height: 28px; letter-spacing: 0.25px;
+      cursor: pointer; font-family: inherit; transition: background .15s;
+    }
+    .btn-remove-cancel:hover { background: #F5F8FF; }
+
+    /* ── Place Info Overlay ── */
+    .place-overlay {
+      position: absolute; inset: 0; z-index: 60;
+      display: none;
+    }
+    .place-overlay.open { display: block; }
+
+    #place-map {
+      position: absolute; inset: 0;
+      z-index: 0;
+    }
+    .place-back-btn {
+      position: absolute; top: 56px; left: 12px; z-index: 2;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #fff; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .place-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 523px; z-index: 2;
+      background: #fff; border-radius: 20px 20px 0 0;
+      display: flex; flex-direction: column;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(0.32,0.72,0,1);
+      overflow: hidden;
+    }
+    .place-overlay.open .place-sheet { transform: translateY(0); }
+
+    .place-sheet-top {
+      height: 88px;
+      padding: 16px 16px 0;
+      flex-shrink: 0;
+    }
+    .place-name-row {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .place-hop-icon {
+      width: 20px; height: 20px; flex-shrink: 0;
+    }
+    .place-name {
+      font-size: 20px; font-weight: 600; color: #4F4F4F;
+      line-height: 30px; letter-spacing: 0.25px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1; min-width: 0;
+    }
+    .place-hours-row {
+      display: flex; align-items: center;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+    .place-hours-pill {
+      display: flex; align-items: center; gap: 4px;
+      background: #fff; border: 1px solid #E7EEFC;
+      border-radius: 999px; padding: 2px 8px;
+      font-size: 12px; font-weight: 500; color: #4F4F4F;
+      letter-spacing: 0.25px; cursor: pointer;
+    }
+
+    .place-photos-wrap {
+      padding: 0 0 0 16px;
+      flex-shrink: 0;
+    }
+    .place-photos {
+      display: flex; gap: 8px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .place-photos::-webkit-scrollbar { display: none; }
+    .place-photo-item {
+      width: 329px; height: 247px;
+      border-radius: 12px; overflow: hidden;
+      position: relative; flex-shrink: 0;
+      background: #E7EEFC;
+    }
+    .place-photo-item img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .meet-here-badge {
+      position: absolute; bottom: 8px; right: 8px;
+      background: #fff; border-radius: 999px;
+      padding: 2px 8px; font-size: 12px; font-weight: 600;
+      color: #0D57E2; letter-spacing: 0.25px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+
+    .place-address-wrap {
+      padding: 8px 16px 0;
+      flex: 1;
+    }
+    .place-address {
+      font-size: 14px; font-weight: 400; color: #4F4F4F;
+      line-height: 22px; letter-spacing: 0.25px;
+    }
+    .place-dist-text {
+      font-size: 14px; font-weight: 400; color: #909090;
+      line-height: 22px; letter-spacing: 0.25px;
+    }
+
+    .place-cta {
+      padding: 8px 10px 24px;
+      flex-shrink: 0;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    }
+    .btn-set-dropoff {
+      width: 100%; height: 43px;
+      background: transparent;
+      border: 1.5px solid #0D57E2;
+      border-radius: 999px;
+      font-size: 18px; font-weight: 600;
+      color: #0D57E2; letter-spacing: 0.25px;
+      cursor: pointer; font-family: inherit;
+    }
+
+    /* Leaflet zoom inside overlay */
+    #place-map .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+      border-radius: 8px !important; overflow: hidden;
+    }
+    #place-map .leaflet-control-zoom a {
+      color: #4F4F4F !important; font-size: 16px !important;
+      line-height: 28px !important; width: 28px !important; height: 28px !important;
     }
 
     /* Toast */
@@ -908,7 +1092,7 @@
       <div>
         <p class="section-title">Bangkok in One Day</p>
         <div class="place-scroll">
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('wat-phra-kaew')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-wat-phra-kaew.png" alt="Wat Phra Kaew" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -920,7 +1104,7 @@
               <span class="place-card-dist">1 km</span>
             </div>
           </div>
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('wat-trimit')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-wat-trimit.png" alt="Wat Trimit" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -932,7 +1116,7 @@
               <span class="place-card-dist">900 m</span>
             </div>
           </div>
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('democracy')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-democracy.png" alt="Democracy Monument" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -959,7 +1143,7 @@
       <div>
         <p class="section-title">Experience Local Dish</p>
         <div class="place-scroll">
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('supanniga')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-supanniga.png" alt="Supanniga Eating Room Tha Tien" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -971,7 +1155,7 @@
               <span class="place-card-dist">1.8 km</span>
             </div>
           </div>
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('sri-trat')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-sri-trat.png" alt="Sri Trat Restaurant &amp; Bar" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -983,7 +1167,7 @@
               <span class="place-card-dist">5.1 km</span>
             </div>
           </div>
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('local-oam')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-sri-trat-2.png" alt="The local by Oam Thong Thai Cuisine" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -1002,7 +1186,7 @@
       <div>
         <p class="section-title">Top local spot</p>
         <div class="place-scroll">
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('siam-paragon')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-siam-paragon.png" alt="Siam Paragon" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -1014,7 +1198,7 @@
               <span class="place-card-dist">6.5 km</span>
             </div>
           </div>
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('iconsiam')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-iconsiam.png" alt="Iconsiam" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -1026,7 +1210,7 @@
               <span class="place-card-dist">8 km</span>
             </div>
           </div>
-          <div class="place-card">
+          <div class="place-card" onclick="openPlace('yaowarat')">
             <div class="place-card-img-wrap">
               <img src="images/figma/place-yaowarat.png" alt="Yaowarat Road (Chinatown)" />
               <button class="bookmark-btn" aria-label="Bookmark">
@@ -1084,6 +1268,61 @@
   <!-- Home Indicator -->
   <div class="home-indicator">
     <div class="home-indicator-bar"></div>
+  </div>
+
+  <!-- Place Info Overlay -->
+  <div class="place-overlay" id="place-overlay">
+    <div id="place-map"></div>
+    <button class="place-back-btn" onclick="closePlace()" aria-label="Back">
+      <svg width="10" height="18" viewBox="0 0 10 18" fill="none">
+        <path d="M9 1L1 9L9 17" stroke="#4F4F4F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="place-sheet" id="place-sheet">
+      <div class="place-sheet-top">
+        <div class="place-name-row">
+          <svg class="place-hop-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="8" r="5" fill="#0D57E2"/>
+            <path d="M10 20C10 20 3 13 3 8a7 7 0 1114 0c0 5-7 12-7 12z" fill="#0D57E2" opacity="0.2"/>
+          </svg>
+          <span class="place-name" id="place-name"></span>
+        </div>
+        <div class="place-hours-row">
+          <div class="place-hours-pill">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="5" stroke="#4F4F4F" stroke-width="1.2"/>
+              <path d="M6 3v3.5l2 1.5" stroke="#4F4F4F" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Opening Hours ›
+          </div>
+        </div>
+      </div>
+      <div class="place-photos-wrap">
+        <div class="place-photos" id="place-photos"></div>
+      </div>
+      <div class="place-address-wrap">
+        <p class="place-address" id="place-address"></p>
+        <p class="place-dist-text" id="place-dist-text"></p>
+      </div>
+      <div class="place-cta">
+        <button class="btn-set-dropoff" onclick="setDropoff()">Set as Drop-off</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remove from Planner Confirm -->
+  <div class="remove-confirm-overlay" id="remove-confirm-overlay">
+    <div class="remove-confirm-sheet">
+      <div class="remove-confirm-header">
+        <p class="remove-confirm-title">Remove this stop?</p>
+        <p class="remove-confirm-subtitle">This stop will be removed from your planner</p>
+      </div>
+      <div class="remove-confirm-preview" id="remove-confirm-preview"></div>
+      <div class="remove-confirm-buttons">
+        <button class="btn-remove-confirm" id="btn-remove-confirm">Remove stop</button>
+        <button class="btn-remove-cancel" id="btn-remove-cancel">Keep in planner</button>
+      </div>
+    </div>
   </div>
 
   <!-- Toast -->
@@ -1144,6 +1383,7 @@
     ]);
 
     PACKS = stopsData.packs || {};
+    (stopsData.attractions || []).forEach(s => { STOPS_COORD[s.id] = s; });
     const packs      = PACKS;
     const addedPacks = plannerData.addedPacks || {};
     const container  = document.getElementById('pack-scroll');
@@ -1257,6 +1497,7 @@
 
   // ── Bottom Sheet ──
   let PACKS = {};
+  let STOPS_COORD = {}; // id → {lat, lng, img, name}
   let checkedStops  = new Set();
   let currentPackId = null;
 
@@ -1309,7 +1550,36 @@
       ${rightSlot}
     `;
 
-    if (!isAdded) item.addEventListener('click', () => toggleStop(stop, item));
+    // Clicking the "Added" badge → remove confirm
+    if (isAdded) {
+      const badge = item.querySelector('.badge-added');
+      if (badge) badge.addEventListener('click', e => {
+        e.stopPropagation();
+        showRemoveConfirm(stop);
+      });
+    }
+
+    // Clicking the checkbox → toggle select/unselect (not open overlay)
+    if (!isAdded) {
+      const cb = item.querySelector('.sheet-checkbox');
+      if (cb) cb.addEventListener('click', e => {
+        e.stopPropagation();
+        toggleStop(stop, item);
+      });
+    }
+
+    // Clicking anywhere else on the item → open place overlay
+    item.addEventListener('click', () => {
+      const coord = STOPS_COORD[stop.id] || {};
+      openPlace({
+        name:    stop.name,
+        img:     stop.img,
+        dist:    stop.dist + ' away',
+        address: 'Bangkok, Thailand',
+        lat:     coord.lat || 13.7500,
+        lng:     coord.lng || 100.4930,
+      });
+    });
     return item;
   }
 
@@ -1379,6 +1649,66 @@
     if (btn) {
       btn.classList.add('added');
       btn.querySelector('.btn-add-label').textContent = `${totalInPlan} stops added`;
+    }
+  });
+
+  // ── Remove-from-planner confirm ──
+  let pendingRemoveStop = null;
+
+  function showRemoveConfirm(stop) {
+    pendingRemoveStop = stop;
+    document.getElementById('remove-confirm-preview').innerHTML = `
+      <div class="delete-preview-card">
+        <img class="delete-preview-thumb" src="${stop.img}" alt="${stop.name}">
+        <div class="delete-preview-info">
+          <span class="delete-preview-name">${stop.name}</span>
+          <div class="delete-preview-meta">
+            <span class="delete-preview-dist">${stop.dist}</span>
+            <span class="delete-preview-tag">${stop.tag}</span>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('remove-confirm-overlay').classList.add('visible');
+  }
+
+  function closeRemoveConfirm() {
+    document.getElementById('remove-confirm-overlay').classList.remove('visible');
+    pendingRemoveStop = null;
+  }
+
+  document.getElementById('btn-remove-cancel').addEventListener('click', closeRemoveConfirm);
+  document.getElementById('remove-confirm-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeRemoveConfirm();
+  });
+
+  document.getElementById('btn-remove-confirm').addEventListener('click', async () => {
+    if (!pendingRemoveStop) return;
+    const stop = pendingRemoveStop;
+    closeRemoveConfirm();
+
+    try {
+      const data = await fetch(`${API_BASE}/api/planner`).then(r => r.json());
+      data.selectedPlaces = (data.selectedPlaces || []).filter(p => p.id !== stop.id);
+      await fetch(`${API_BASE}/api/planner`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      updatePlanBadge(data.selectedPlaces.length);
+
+      // Update the sheet item: remove "already-added", replace badge with checkbox
+      const item = document.querySelector(`[data-stop-id="${stop.id}"]`);
+      if (item) {
+        item.classList.remove('already-added');
+        const badge = item.querySelector('.badge-added');
+        if (badge) {
+          const cb = document.createElement('div');
+          cb.className = 'sheet-checkbox';
+          badge.replaceWith(cb);
+        }
+      }
+    } catch(e) {
+      showToast('Failed to remove stop');
     }
   });
 
@@ -1466,6 +1796,94 @@
   makeDraggable(document.querySelector('.banner-scroll'));
   makeDraggable(document.querySelector('.pack-scroll'));
   document.querySelectorAll('.place-scroll').forEach(el => makeDraggable(el));
+
+  // ── Place Info Overlay ──
+  const PLACES = {
+    'wat-phra-kaew': { name: 'The Temple of the Emerald Buddha (Wat Phra Kaew)', address: 'Na Phra Lan Rd, Phra Nakhon, Bangkok 10200', dist: '1 km away', img: 'images/figma/place-wat-phra-kaew.png', lat: 13.7516, lng: 100.4927 },
+    'wat-trimit':    { name: 'Temple of The Golden Buddha (Wat Trimit)',          address: '661 Charoen Krung Rd, Samphanthawong, Bangkok', dist: '900 m away', img: 'images/figma/place-wat-trimit.png', lat: 13.7403, lng: 100.5139 },
+    'democracy':     { name: 'Democracy Monument',                                 address: 'Ratchadamnoen Klang Ave, Phra Nakhon, Bangkok', dist: '1.2 km away', img: 'images/figma/place-democracy.png', lat: 13.7563, lng: 100.5018 },
+    'supanniga':     { name: 'Supanniga Eating Room Tha Tien',                     address: '392/25-26 Maharaj Rd, Phra Nakhon, Bangkok', dist: '1.8 km away', img: 'images/figma/place-supanniga.png', lat: 13.7457, lng: 100.4924 },
+    'sri-trat':      { name: 'Sri Trat Restaurant & Bar',                          address: '90 Sukhumvit Soi 33, Watthana, Bangkok', dist: '5.1 km away', img: 'images/figma/place-sri-trat.png', lat: 13.7296, lng: 100.5702 },
+    'local-oam':     { name: 'The local by Oam Thong Thai Cuisine',                address: '32/1 Saladaeng Rd, Silom, Bangkok', dist: '8.2 km away', img: 'images/figma/place-sri-trat-2.png', lat: 13.7270, lng: 100.5344 },
+    'siam-paragon':  { name: 'Siam Paragon',                                       address: '991 Rama I Rd, Pathum Wan, Bangkok 10330', dist: '6.5 km away', img: 'images/figma/place-siam-paragon.png', lat: 13.7462, lng: 100.5347 },
+    'iconsiam':      { name: 'Iconsiam',                                            address: '299 Charoen Nakhon Rd, Khlong San, Bangkok', dist: '8 km away', img: 'images/figma/place-iconsiam.png', lat: 13.7271, lng: 100.5100 },
+    'yaowarat':      { name: 'Yaowarat Road (Chinatown)',                           address: 'Yaowarat Rd, Samphanthawong, Bangkok', dist: '1.8 km away', img: 'images/figma/place-yaowarat.png', lat: 13.7398, lng: 100.5097 },
+  };
+
+  let placeMap = null;
+  let currentPlaceData = null;
+
+  // Accept either a string id (from PLACES) or a plain data object
+  function openPlace(input) {
+    const place = typeof input === 'string' ? PLACES[input] : input;
+    if (!place) return;
+    currentPlaceData = place;
+
+    // Populate text
+    document.getElementById('place-name').textContent    = place.name;
+    document.getElementById('place-address').textContent = place.address;
+    document.getElementById('place-dist-text').textContent = place.dist;
+
+    // Photo carousel — repeat same photo 3×
+    const photos = document.getElementById('place-photos');
+    photos.innerHTML = [0,1,2].map((_, i) =>
+      `<div class="place-photo-item">${i === 0 ? '<span class="meet-here-badge">Meet here</span>' : ''}
+        <img src="${place.img}" alt="${place.name}" />
+      </div>`
+    ).join('');
+    makeDraggable(photos);
+
+    // Show overlay
+    document.getElementById('place-overlay').classList.add('open');
+
+    // Init or update Leaflet map
+    if (!placeMap) {
+      placeMap = L.map('place-map', { zoomControl: true, attributionControl: false })
+                  .setView([place.lat, place.lng], 16);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+      }).addTo(placeMap);
+    } else {
+      placeMap.setView([place.lat, place.lng], 16);
+    }
+
+    // Custom marker
+    if (placeMap._placeMarker) placeMap._placeMarker.remove();
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:44px;height:44px;border-radius:50%;border:3px solid #fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.3)">
+               <img src="${place.img}" style="width:100%;height:100%;object-fit:cover"/>
+             </div>
+             <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid #fff;margin:0 auto;margin-top:-2px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.2))"></div>`,
+      iconSize: [44, 58], iconAnchor: [22, 58],
+    });
+    placeMap._placeMarker = L.marker([place.lat, place.lng], { icon }).addTo(placeMap);
+
+    // Invalidate size after transition, then offset center above the sheet
+    // Sheet is 523px → visible map area = 852 - 523 = 329px
+    // Pan down 262px (≈ 523/2) so marker sits at center of visible area
+    setTimeout(() => {
+      placeMap.invalidateSize();
+      placeMap.panBy([0, 262], { animate: false });
+    }, 50);
+  }
+
+  function closePlace() {
+    document.getElementById('place-overlay').classList.remove('open');
+  }
+
+  function setDropoff() {
+    if (!currentPlaceData) return;
+    const place = currentPlaceData;
+    localStorage.setItem('booking_mode',        'dropoff');
+    localStorage.setItem('booking_pickup',       'Siam Paragon');
+    localStorage.setItem('booking_pickup_lat',   13.7462);
+    localStorage.setItem('booking_pickup_lng',   100.5347);
+    localStorage.setItem('booking_dropoff',      place.name);
+    localStorage.setItem('booking_dropoff_lat',  place.lat);
+    localStorage.setItem('booking_dropoff_lng',  place.lng);
+    window.location.href = 'booking.html';
+  }
 </script>
 
 <script>

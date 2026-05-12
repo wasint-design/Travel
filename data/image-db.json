@@ -29,6 +29,14 @@
     "tab-inbox":           { "path": "images/figma/tab-inbox.svg",            "alt": "Inbox" },
     "tab-plan":            { "path": "images/figma/tab-plan.svg",             "alt": "Plan" },
     "tab-activity":        { "path": "images/figma/tab-activity.svg",         "alt": "Activity" },
-    "tab-more":            { "path": "images/figma/tab-more.svg",             "alt": "More" }
+    "tab-more":            { "path": "images/figma/tab-more.svg",             "alt": "More" },
+
+    "prehome-mascot":            { "path": "images/figma/prehome-mascot.png",             "alt": "muvmi mascot" },
+    "prehome-icon-daily-ride":   { "path": "images/figma/prehome-icon-daily-ride.png",    "alt": "Daily Ride icon" },
+    "prehome-icon-alldaypass":   { "path": "images/figma/prehome-icon-alldaypass.png",    "alt": "All-Day Pass icon" },
+    "prehome-icon-chevron-right":{ "path": "images/figma/prehome-icon-chevron-right.png", "alt": "" },
+    "prehome-icon-binoculars":   { "path": "images/figma/prehome-icon-binoculars.png",    "alt": "" },
+    "login-mascot":              { "path": "images/figma/login-mascot.png",               "alt": "muvmi mascot tuk-tuk" },
+    "login-icon-back":           { "path": "images/figma/login-icon-back.png",            "alt": "Back" }
   }
 }
