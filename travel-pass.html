@@ -508,7 +508,7 @@
 
     .how-sheet {
       position: absolute;
-      top: 60px; left: 0; right: 0; bottom: 0;
+      top: 144px; left: 0; right: 0; bottom: 0;
       background: #fff;
       border-radius: 16px 16px 0 0;
       overflow-y: auto;
@@ -742,7 +742,7 @@
           </div>
           <div class="day-pass-card-buttons">
             <button class="btn-redeem-pass" onclick="openRedeemSheet()">Redeem Pass</button>
-            <button class="btn-buy-pass-card">Buy Pass</button>
+            <button class="btn-buy-pass-card" onclick="window.location.href='buy-pass.html'">Buy Pass</button>
           </div>
         </div>
         <!-- Banner 2: Grand Palace -->
@@ -942,7 +942,7 @@
       <input class="redeem-input" id="redeem-input" type="text" placeholder="" oninput="onCodeInput()" />
       <button class="btn-apply" id="btn-apply" disabled>Apply</button>
       <p class="redeem-divider">No Pass yet? Tap to get one</p>
-      <button class="btn-buy" onclick="window.location.href='index.html'">Buy Pass</button>
+      <button class="btn-buy" onclick="window.location.href='buy-pass.html'">Buy Pass</button>
     </div>
   </div>
 

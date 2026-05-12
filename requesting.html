@@ -324,6 +324,32 @@
     { name: 'Ladprao Intersection',                                                 dist: '7.5 km', type: 'pin',   lat: 13.8165, lng: 100.5628, category: 'Landmark' },
     { name: '[OFF15] Lat Phrao 71 Intersection (Soi Ladprao 71)',                   dist: '7.6 km', type: 'muvmi', lat: 13.8003, lng: 100.5692, category: null },
     { name: 'Mo Chit BTS Station',                                                  dist: '7.6 km', type: 'pin',   lat: 13.8027, lng: 100.5540, category: 'Landmark' },
+
+    // ── Mall ──
+    { name: 'Siam Paragon',                                                          dist: '6.5 km', type: 'pin',   lat: 13.7462, lng: 100.5347, category: 'Mall' },
+    { name: 'MBK Center',                                                            dist: '6.2 km', type: 'pin',   lat: 13.7449, lng: 100.5299, category: 'Mall' },
+    { name: 'Central World',                                                         dist: '6.8 km', type: 'pin',   lat: 13.7465, lng: 100.5392, category: 'Mall' },
+    { name: 'Iconsiam',                                                              dist: '8.0 km', type: 'pin',   lat: 13.7225, lng: 100.5134, category: 'Mall' },
+    { name: 'Terminal 21',                                                           dist: '9.2 km', type: 'pin',   lat: 13.7372, lng: 100.5601, category: 'Mall' },
+
+    // ── Restaurant ──
+    { name: 'Supanniga Eating Room Tha Tien',                                        dist: '1.8 km', type: 'pin',   lat: 13.7435, lng: 100.4946, category: 'Restaurant' },
+    { name: 'Jay Fai',                                                               dist: '1.2 km', type: 'pin',   lat: 13.7540, lng: 100.5048, category: 'Restaurant' },
+    { name: 'Sri Trat Restaurant & Bar',                                             dist: '5.1 km', type: 'pin',   lat: 13.7520, lng: 100.5008, category: 'Restaurant' },
+    { name: 'Blue Elephant Royal Thai Cuisine',                                      dist: '4.8 km', type: 'pin',   lat: 13.7246, lng: 100.5150, category: 'Restaurant' },
+    { name: 'Boat Noodle Alley (Ratchawithi)',                                       dist: '3.5 km', type: 'pin',   lat: 13.7700, lng: 100.5290, category: 'Restaurant' },
+
+    // ── Cafe ──
+    { name: 'Karmakamet Conveyance Cafe',                                            dist: '1.8 km', type: 'pin',   lat: 13.7485, lng: 100.5030, category: 'Cafe' },
+    { name: 'Roots Coffee Roaster (Charoen Krung)',                                  dist: '3.2 km', type: 'pin',   lat: 13.7265, lng: 100.5132, category: 'Cafe' },
+    { name: 'Ceresia Coffee Roasters',                                               dist: '5.0 km', type: 'pin',   lat: 13.7227, lng: 100.5285, category: 'Cafe' },
+    { name: 'The Local Coffee (Phra Nakhon)',                                        dist: '0.8 km', type: 'pin',   lat: 13.7588, lng: 100.4975, category: 'Cafe' },
+
+    // ── Activity ──
+    { name: 'Lumphini Park',                                                         dist: '5.0 km', type: 'pin',   lat: 13.7296, lng: 100.5414, category: 'Activity' },
+    { name: 'Asiatique The Riverfront',                                              dist: '5.5 km', type: 'pin',   lat: 13.7018, lng: 100.5020, category: 'Activity' },
+    { name: 'Bangkok Art and Culture Centre (BACC)',                                 dist: '6.5 km', type: 'pin',   lat: 13.7471, lng: 100.5296, category: 'Activity' },
+    { name: 'Chao Phraya River Cruise Pier (Sathorn)',                               dist: '4.2 km', type: 'pin',   lat: 13.7185, lng: 100.5138, category: 'Activity' },
   ];
 
   // muvmi tuk-tuk lightning bolt icon (orange)
@@ -461,6 +487,7 @@
     el.addEventListener('mouseleave', release);
   }
 
+  makeDraggable(document.getElementById('cat-filter-row'));
   makeDraggable(document.getElementById('location-list'), { vertical: true });
 </script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>

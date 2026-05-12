@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0D57E2" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="images/icon-192.png" />
+  <link rel="stylesheet" href="mobile.css" />
+  <title>Plan Map — muvmi Tourist</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone Frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+
+    /* ── Status Bar ── */
+    .status-bar {
+      height: 44px;
+      background: #fff;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 6px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #4F4F4F; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Nav Bar ── */
+    .nav-bar {
+      height: 56px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 1px 0 #EEEEEE;
+    }
+    .btn-back {
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; padding: 4px; color: #4F4F4F;
+    }
+    .nav-title {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-size: 20px; font-weight: 600; color: #4F4F4F; white-space: nowrap;
+    }
+    .nav-count {
+      font-size: 13px; font-weight: 500; color: #909090; letter-spacing: 0.2px;
+    }
+
+    /* ── Map ── */
+    #map {
+      flex: 1;
+      min-height: 0;
+      z-index: 1;
+    }
+
+    /* Custom popup */
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 0;
+    }
+    .leaflet-popup-content {
+      margin: 10px 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+    }
+    .popup-name { font-weight: 600; color: #4F4F4F; line-height: 18px; }
+    .popup-meta { font-size: 11px; color: #909090; margin-top: 2px; }
+    .leaflet-popup-tip { background: #fff; }
+
+    /* Leaflet zoom control */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+      border-radius: 8px !important;
+      overflow: hidden;
+    }
+    .leaflet-control-zoom a {
+      color: #4F4F4F !important;
+      font-size: 16px !important;
+      line-height: 28px !important;
+      width: 28px !important;
+      height: 28px !important;
+    }
+
+    /* ── Bottom Stop List ── */
+    .stop-list-panel {
+      flex-shrink: 0;
+      background: #fff;
+      border-top: 1px solid #F0F0F0;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      height: 220px;
+    }
+    .stop-list-handle {
+      display: flex;
+      justify-content: center;
+      padding: 8px 0 4px;
+      flex-shrink: 0;
+    }
+    .stop-list-handle-bar {
+      width: 36px; height: 4px;
+      background: #E0E0E0; border-radius: 2px;
+    }
+    .stop-list-title {
+      font-size: 13px; font-weight: 600; color: #909090;
+      padding: 0 16px 8px;
+      flex-shrink: 0;
+      letter-spacing: 0.2px;
+    }
+    .stop-list-scroll {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: none;
+      padding: 0 16px;
+    }
+    .stop-list-scroll::-webkit-scrollbar { display: none; }
+
+    .stop-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F5F5F5;
+      cursor: pointer;
+    }
+    .stop-item:last-child { border-bottom: none; }
+    .stop-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #0D57E2;
+      color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .stop-thumb {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #E7EEFC;
+    }
+    .stop-info { flex: 1; min-width: 0; }
+    .stop-name {
+      font-size: 13px; font-weight: 600; color: #4F4F4F;
+      line-height: 20px; letter-spacing: 0.2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .stop-meta {
+      display: flex; align-items: center; gap: 6px; margin-top: 2px;
+    }
+    .stop-dist { font-size: 11px; color: #909090; }
+    .stop-tag {
+      background: #E7EEFC; border-radius: 6px;
+      padding: 1px 6px; font-size: 11px; color: #4F4F4F;
+      white-space: nowrap;
+    }
+    .stop-chevron {
+      flex-shrink: 0; color: #C0C0C0;
+    }
+
+    /* Empty state */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+    }
+    .empty-state-text {
+      font-size: 14px; font-weight: 500; color: #909090;
+      text-align: center; line-height: 22px;
+    }
+
+    /* ── Home Indicator ── */
+    .home-indicator {
+      height: 34px; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-indicator-bar { width: 130px; height: 5px; background: #1a1a1a; border-radius: 100px; }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">5:13</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+        <rect x="0" y="7" width="3" height="5" rx="1" fill="#4F4F4F"/>
+        <rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="#4F4F4F"/>
+        <rect x="9" y="2" width="3" height="10" rx="1" fill="#4F4F4F"/>
+        <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#4F4F4F" opacity="0.3"/>
+      </svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+        <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#4F4F4F"/>
+        <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#4F4F4F"/>
+        <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#4F4F4F"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+        <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#4F4F4F" stroke-opacity="0.35"/>
+        <rect x="2" y="2" width="15" height="8" rx="2" fill="#4F4F4F"/>
+        <path d="M23 4v4a2 2 0 000-4z" fill="#4F4F4F" fill-opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Nav Bar -->
+  <div class="nav-bar">
+    <button class="btn-back" onclick="window.location.href='planner.html'">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="#4F4F4F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <span class="nav-title">My Plan</span>
+    <span class="nav-count" id="nav-count"></span>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Bottom Stop List -->
+  <div class="stop-list-panel">
+    <div class="stop-list-handle"><div class="stop-list-handle-bar"></div></div>
+    <p class="stop-list-title" id="list-title">My stops</p>
+    <div class="stop-list-scroll" id="stop-list"></div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"><div class="home-indicator-bar"></div></div>
+
+</div>
+
+<script src="api.js"></script>
+<script>
+  const API_BASE = '';
+  let map, activeMarker = null;
+  const markerRefs = [];
+
+  function makeMarkerIcon(n, isActive, imgSrc) {
+    const size       = isActive ? 52 : 44;
+    const border     = isActive ? '3px' : '2.5px';
+    const shadow     = isActive ? '0 4px 16px rgba(0,0,0,0.35)' : '0 2px 8px rgba(0,0,0,0.25)';
+    const pointerSize = isActive ? 10 : 8;
+    const totalH     = size + pointerSize;
+
+    const imgHtml = imgSrc
+      ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+      : `<div style="width:100%;height:100%;background:#0D57E2;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;">${n}</div>`;
+
+    const html = `
+      <div style="display:flex;flex-direction:column;align-items:center;width:${size}px;">
+        <div style="width:${size}px;height:${size}px;border-radius:50%;border:${border} solid #fff;box-shadow:${shadow};overflow:hidden;background:#e0e0e0;">${imgHtml}</div>
+        <div style="width:0;height:0;border-left:${pointerSize/2}px solid transparent;border-right:${pointerSize/2}px solid transparent;border-top:${pointerSize}px solid #fff;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.2));margin-top:-1px;"></div>
+      </div>`;
+
+    return L.divIcon({
+      className: '',
+      html,
+      iconSize:    [size, totalH],
+      iconAnchor:  [size / 2, totalH],
+      popupAnchor: [0, -(totalH) + 4],
+    });
+  }
+
+  function setActiveMarker(index) {
+    markerRefs.forEach(({ marker, index: mi, imgSrc }) => {
+      marker.setIcon(makeMarkerIcon(mi + 1, false, imgSrc));
+    });
+    const ref = markerRefs[index];
+    if (!ref) return;
+    ref.marker.setIcon(makeMarkerIcon(index + 1, true, ref.imgSrc));
+    map.flyTo(ref.coords, 15, { duration: 0.5 });
+    ref.marker.openPopup();
+  }
+
+  async function init() {
+    map = L.map('map', { zoomControl: false, attributionControl: false })
+           .setView([13.7563, 100.5018], 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19,
+    }).addTo(map);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    // Load planner + stops in parallel
+    const [plannerData, stopsData] = await Promise.all([
+      fetch(`${API_BASE}/api/planner`).then(r => r.json()),
+      fetch(`${API_BASE}/api/stops`).then(r => r.json()),
+    ]);
+
+    const selectedPlaces = plannerData.selectedPlaces || [];
+
+    // Build coord lookup by id from stops.json
+    const coordMap = {};
+    const addCoords = p => { if (p.id) coordMap[p.id] = { lat: p.lat, lng: p.lng, img: p.img }; };
+    (stopsData.attractions || []).forEach(addCoords);
+    Object.values(stopsData.packs || {}).forEach(pack => (pack.stops || []).forEach(addCoords));
+
+    // Merge planner places with their coordinates
+    const places = selectedPlaces.map(p => ({
+      ...p,
+      lat: coordMap[p.id]?.lat ?? null,
+      lng: coordMap[p.id]?.lng ?? null,
+      imgSrc: p.imgSrc || coordMap[p.id]?.img || '',
+    })).filter(p => p.lat != null);
+
+    const listEl   = document.getElementById('stop-list');
+    const titleEl  = document.getElementById('list-title');
+    const countEl  = document.getElementById('nav-count');
+
+    countEl.textContent = `${places.length} stop${places.length !== 1 ? 's' : ''}`;
+    titleEl.textContent = `My stops (${places.length})`;
+
+    if (places.length === 0) {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="#C0C0C0"/>
+          </svg>
+          <p class="empty-state-text">No stops in your plan yet.<br>Add stops from the planner.</p>
+        </div>`;
+      return;
+    }
+
+    const bounds = [];
+
+    places.forEach((place, i) => {
+      const coords = [place.lat, place.lng];
+      const n = i + 1;
+
+      // Map marker
+      const marker = L.marker(coords, { icon: makeMarkerIcon(n, false, place.imgSrc) }).addTo(map);
+      marker.bindPopup(`
+        <div class="popup-name">${place.name}</div>
+        <div class="popup-meta">${place.dist}${place.tag ? ' · ' + place.tag : ''}</div>
+      `, { closeButton: false, maxWidth: 200 });
+      markerRefs.push({ marker, index: i, coords, imgSrc: place.imgSrc });
+      bounds.push(coords);
+
+      marker.on('click', () => setActiveMarker(i));
+
+      // List item
+      const item = document.createElement('div');
+      item.className = 'stop-item';
+      item.innerHTML = `
+        <div class="stop-num">${n}</div>
+        ${place.imgSrc
+          ? `<img class="stop-thumb" src="${place.imgSrc}" alt="${place.name}" />`
+          : `<div class="stop-thumb" style="display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="#C0C0C0"/></svg></div>`}
+        <div class="stop-info">
+          <p class="stop-name">${place.name}</p>
+          <div class="stop-meta">
+            <span class="stop-dist">${place.dist}</span>
+            ${place.tag ? `<span class="stop-tag">${place.tag}</span>` : ''}
+          </div>
+        </div>
+        <svg class="stop-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M9 18l6-6-6-6" stroke="#C0C0C0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+      item.addEventListener('click', () => setActiveMarker(i));
+      listEl.appendChild(item);
+    });
+
+    map.fitBounds(bounds, { padding: [48, 48] });
+  }
+
+  function makeDraggable(el, { vertical = false } = {}) {
+    let isDown = false, axis = null, startX, startY, scrollLeft, scrollTop;
+    let velX = 0, velY = 0, lastX = 0, lastY = 0, lastT = 0, rafId = null;
+    const AXIS_THRESHOLD = 5;
+    el.style.cursor = 'grab'; el.style.userSelect = 'none';
+    function cancelMomentum() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+    function applyMomentum() {
+      if (axis === 'x') { velX *= 0.92; el.scrollLeft += velX; if (Math.abs(velX) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      else if (axis === 'y') { velY *= 0.92; el.scrollTop += velY; if (Math.abs(velY) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      rafId = null;
+    }
+    el.addEventListener('mousedown', e => {
+      if (e.target.closest('button, a, input, [role="button"]')) return;
+      cancelMomentum(); isDown = true; axis = null; el.style.cursor = 'grabbing';
+      startX = e.pageX; startY = e.pageY; scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+      lastX = e.pageX; lastY = e.pageY; lastT = performance.now(); velX = 0; velY = 0;
+    });
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      const dx = e.pageX - startX, dy = e.pageY - startY;
+      if (!axis) {
+        if (Math.abs(dx) > AXIS_THRESHOLD || Math.abs(dy) > AXIS_THRESHOLD)
+          axis = (!vertical || Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+        else return;
+      }
+      e.preventDefault();
+      const now = performance.now(), dt = now - lastT || 1;
+      if (axis === 'x') { velX = (lastX - e.pageX) / dt * 12; el.scrollLeft = scrollLeft - dx; }
+      else { velY = (lastY - e.pageY) / dt * 12; el.scrollTop = scrollTop - dy; }
+      lastX = e.pageX; lastY = e.pageY; lastT = now;
+    });
+    const release = () => {
+      if (!isDown) return; isDown = false; el.style.cursor = 'grab';
+      if (axis !== null) el.addEventListener('click', e => e.stopPropagation(), { capture: true, once: true });
+      rafId = requestAnimationFrame(applyMomentum);
+    };
+    el.addEventListener('mouseup', release);
+    el.addEventListener('mouseleave', release);
+  }
+
+  init().then(() => {
+    makeDraggable(document.getElementById('stop-list'), { vertical: true });
+  });
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>

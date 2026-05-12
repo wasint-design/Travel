@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Buy Pass — muvmi</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    img { -webkit-user-drag: none; user-select: none; }
+
+    body {
+      background: #F0F2F5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 32px 16px;
+    }
+
+    /* ── Phone Frame ── */
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: #fff;
+      border-radius: 48px;
+      box-shadow:
+        0 0 0 10px #1a1a1a,
+        0 0 0 12px #3a3a3a,
+        0 32px 64px rgba(0,0,0,0.35);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+
+    /* ── Browser Chrome Header ── */
+    .browser-header {
+      flex-shrink: 0;
+      background: #fff;
+      border-bottom: 1px solid #E8E8E8;
+      height: 92px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Status bar */
+    .status-bar {
+      height: 50px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 20px 8px;
+    }
+    .status-time { font-size: 15px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.2px; }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+
+    /* Nav row */
+    .browser-nav {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 12px;
+    }
+    .btn-back {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      color: #0D57E2; flex-shrink: 0;
+    }
+    .url-bar {
+      flex: 1;
+      height: 32px;
+      background: #F2F2F7;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .url-bar-lock {
+      color: #8E8E93;
+    }
+    .url-bar-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a1a1a;
+      letter-spacing: -0.1px;
+    }
+
+    /* ── Scrollable web content ── */
+    .web-content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .web-content::-webkit-scrollbar { display: none; }
+    .web-content img {
+      width: 393px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Browser Header -->
+  <div class="browser-header">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="status-time">9:41</span>
+      <div class="status-icons">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+          <rect x="0" y="7" width="3" height="5" rx="1" fill="#1a1a1a"/>
+          <rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="#1a1a1a"/>
+          <rect x="9" y="2" width="3" height="10" rx="1" fill="#1a1a1a"/>
+          <rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1a1a1a" opacity="0.3"/>
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+          <path d="M8 9.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" fill="#1a1a1a"/>
+          <path d="M8 6C6.1 6 4.4 6.8 3.2 8L4.6 9.4C5.5 8.5 6.7 8 8 8s2.5.5 3.4 1.4L12.8 8C11.6 6.8 9.9 6 8 6z" fill="#1a1a1a"/>
+          <path d="M8 2C5 2 2.3 3.2.4 5.2L1.8 6.6C3.3 5 5.5 4 8 4s4.7 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z" fill="#1a1a1a"/>
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="#1a1a1a" stroke-opacity="0.35"/>
+          <rect x="2" y="2" width="15" height="8" rx="2" fill="#1a1a1a"/>
+          <path d="M23 4v4a2 2 0 000-4z" fill="#1a1a1a" fill-opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Nav Row -->
+    <div class="browser-nav">
+      <button class="btn-back" onclick="history.back()" aria-label="Back">
+        <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
+          <path d="M10 2L2 10L10 18" stroke="#0D57E2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="url-bar">
+        <svg class="url-bar-lock" width="12" height="14" viewBox="0 0 12 14" fill="none">
+          <rect x="1" y="6" width="10" height="7.5" rx="1.5" stroke="#8E8E93" stroke-width="1.2"/>
+          <path d="M3.5 6V4a2.5 2.5 0 015 0v2" stroke="#8E8E93" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <span class="url-bar-text">Muvmi.travel</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Web Page Content -->
+  <div class="web-content" id="web-content">
+    <img src="images/figma/buy-pass-web.png" alt="Muvmi Travel Pass" />
+  </div>
+
+</div>
+
+<script>
+  function makeDraggable(el, { vertical = false } = {}) {
+    let isDown = false, axis = null, startX, startY, scrollLeft, scrollTop;
+    let velX = 0, velY = 0, lastX = 0, lastY = 0, lastT = 0, rafId = null;
+    const AXIS_THRESHOLD = 5;
+    el.style.cursor = 'grab'; el.style.userSelect = 'none';
+    function cancelMomentum() { if (rafId) { cancelAnimationFrame(rafId); rafId = null; } }
+    function applyMomentum() {
+      if (axis === 'y') { velY *= 0.92; el.scrollTop += velY; if (Math.abs(velY) > 0.5) { rafId = requestAnimationFrame(applyMomentum); return; } }
+      rafId = null;
+    }
+    el.addEventListener('mousedown', e => {
+      if (e.target.closest('button, a, input, [role="button"]')) return;
+      cancelMomentum(); isDown = true; axis = null; el.style.cursor = 'grabbing';
+      startX = e.pageX; startY = e.pageY; scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+      lastX = e.pageX; lastY = e.pageY; lastT = performance.now(); velX = 0; velY = 0;
+    });
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      const dx = e.pageX - startX, dy = e.pageY - startY;
+      if (!axis) {
+        if (Math.abs(dx) > AXIS_THRESHOLD || Math.abs(dy) > AXIS_THRESHOLD)
+          axis = (!vertical || Math.abs(dx) > Math.abs(dy)) ? 'x' : 'y';
+        else return;
+      }
+      e.preventDefault();
+      const now = performance.now(), dt = now - lastT || 1;
+      if (axis === 'y') { velY = (lastY - e.pageY) / dt * 12; el.scrollTop = scrollTop - dy; }
+      lastX = e.pageX; lastY = e.pageY; lastT = now;
+    });
+    const release = () => {
+      if (!isDown) return; isDown = false; el.style.cursor = 'grab';
+      if (axis !== null) el.addEventListener('click', e => e.stopPropagation(), { capture: true, once: true });
+      rafId = requestAnimationFrame(applyMomentum);
+    };
+    el.addEventListener('mouseup', release);
+    el.addEventListener('mouseleave', release);
+  }
+
+  makeDraggable(document.getElementById('web-content'), { vertical: true });
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js');</script>
+</body>
+</html>
